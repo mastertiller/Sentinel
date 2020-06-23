@@ -1,20 +1,19 @@
 package com.alibaba.csp.sentinel.qlearning;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import com.alibaba.csp.sentinel.Constants;
-import com.alibaba.csp.sentinel.qlearning.QLearningMetric;
-import com.alibaba.csp.sentinel.util.TimeUtil;
 import com.alibaba.csp.sentinel.Entry;
 import com.alibaba.csp.sentinel.EntryType;
 import com.alibaba.csp.sentinel.SphU;
 import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.alibaba.csp.sentinel.slots.system.SystemRule;
 import com.alibaba.csp.sentinel.slots.system.SystemRuleManager;
+import com.alibaba.csp.sentinel.util.TimeUtil;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 /*
 
 
@@ -91,13 +90,13 @@ public class QLearningTrainDemo {
         SystemRule rule = new SystemRule();
         // max load is 3
         rule.setHighestSystemLoad(3.0);
-//         max cpu usage is 60%
+        //max cpu usage is 60%
         rule.setHighestCpuUsage(0.9);
-//         max avg rt of all request is 10 ms
+        //max avg rt of all request is 10 ms
         rule.setAvgRt(20);
-//         max total qps is 20
+        //max total qps is 20
         rule.setQps(500);
-//         max parallel working thread is 10
+        //max parallel working thread is 10
         rule.setMaxThread(100);
 
         rules.add(rule);
@@ -144,10 +143,9 @@ public class QLearningTrainDemo {
                 System.out.print(seconds + ", " + TimeUtil.currentTimeMillis() + ", total:"
                         + oneSecondTotal + ", pass:"
                         + oneSecondPass + ", block:" + oneSecondBlock);
-                if (qLearningMetric.isQLearning() && qLearningMetric.isTrain()){
+                if (qLearningMetric.isQLearning() && qLearningMetric.isTrain()) {
                     System.out.println(" ------now is training------ ");
-                }
-                else{
+                } else {
                     System.out.println();
                 }
                 if (seconds-- <= 0) {
@@ -157,9 +155,9 @@ public class QLearningTrainDemo {
 
             printArray(avgRTArray, "Average RT");
             printArray(qpsArray, "Success QPS");
-//            if (qLearningMetric.isQLearning()){
-            qLearningMetric.showPolicy();
-//            }
+            if (qLearningMetric.isQLearning()){
+                qLearningMetric.showPolicy();
+            }
             System.exit(0);
         }
     }
@@ -173,7 +171,5 @@ public class QLearningTrainDemo {
         System.out.print("]");
         System.out.println();
     }
-
-
 }
 

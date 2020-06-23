@@ -13,34 +13,33 @@ public class QLearningMetric {
     final int stateC = 2;
     final int stateD = 3;
     final int stateE = 4;
-//    final int stateF = 5;
 
     final int[] states = new int[]{stateA, stateB, stateC, stateD, stateE};
 
     String[] stateNames = new String[]{"CPU Usage: (0%, 25%)", "CPU Usage: (25%, 50%)", "CPU Usage: (50%, 75%)", "CPU Usage: (75%, 100%)", "CPU Usage: UnGet"};
     String[] actionNames = new String[]{"Block", "Accept"};
 
-    private  volatile double utilityIncrease;
-    private  volatile int state;
-    private  volatile int action;
+    private volatile double utilityIncrease;
+    private volatile int state;
+    private volatile int action;
 
-    private  volatile int statesCount = 5;
-    private  volatile int actionsCount = 2;
-    private  volatile double[][] Q = new double[statesCount][actionsCount];
+    private volatile int statesCount = 5;
+    private volatile int actionsCount = 2;
+    private volatile double[][] Q = new double[statesCount][actionsCount];
 
-    private  volatile int maxTrainNum = 100000;
-    private  volatile boolean isTrain = true;
+    private volatile int maxTrainNum = 100000;
+    private volatile boolean isTrain = true;
 
-    private  volatile int trainNum = 0; //当前训练到第几次
+    private volatile int trainNum = 0; //当前训练到第几次
 
-    private  double alpha = 1;//alpha控制了效用方程的qps的参数
-    private  double beta = 0.02;//控制了效用方程的RT的参数
+    private double alpha = 1;//alpha控制了效用方程的qps的参数
+    private double beta = 0.02;//控制了效用方程的RT的参数
 
-    private  double delta = 1;
-    private  double gamma = 1;
+    private double delta = 1;
+    private double gamma = 1;
 
-    private  int rewardValue = 10;
-    private  int punishValue = -1;
+    private int rewardValue = 10;
+    private int punishValue = -1;
 
 
     private QLearningMetric() {
@@ -105,11 +104,11 @@ public class QLearningMetric {
         this.trainNum++;
     }
 
-    public  int getMaxTrainNum() {
+    public int getMaxTrainNum() {
         return maxTrainNum;
     }
 
-    public  boolean isTrain() {
+    public boolean isTrain() {
         return isTrain;
     }
 
@@ -144,27 +143,27 @@ public class QLearningMetric {
         return policyGotoAction;
     }
 
-    public  double getAlpha() {
+    public double getAlpha() {
         return alpha;
     }
 
-    public  double getBeta() {
+    public double getBeta() {
         return beta;
     }
 
-    public  double getDelta() {
+    public double getDelta() {
         return delta;
     }
 
-    public  double getGamma() {
+    public double getGamma() {
         return gamma;
     }
 
-    public  int getRewardValue() {
+    public int getRewardValue() {
         return rewardValue;
     }
 
-    public  int getPunishValue() {
+    public int getPunishValue() {
         return punishValue;
     }
 

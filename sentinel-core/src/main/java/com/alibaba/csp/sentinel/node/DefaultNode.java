@@ -113,12 +113,6 @@ public class DefaultNode extends StatisticNode {
     }
 
     @Override
-    public void setUtilityIncrease(double utilityIncrease) {
-        super.setUtilityIncrease(utilityIncrease);
-        this.clusterNode.setUtilityIncrease(utilityIncrease);
-    }
-
-    @Override
     public void increaseExceptionQps(int count) {
         super.increaseExceptionQps(count);
         this.clusterNode.increaseExceptionQps(count);
