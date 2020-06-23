@@ -95,7 +95,7 @@ public final class SystemRuleManager {
 
     @SuppressWarnings("PMD.ThreadPoolCreationRule")
     private final static ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1,
-            new NamedThreadFactory("sentinel-system-status-record-task", true));
+        new NamedThreadFactory("sentinel-system-status-record-task", true));
 
     static {
         checkSystemStatus.set(false);
@@ -200,17 +200,17 @@ public final class SystemRuleManager {
             }
 
             RecordLog.info(String.format("[SystemRuleManager] Current system check status: %s, "
-                            + "highestSystemLoad: %e, "
-                            + "highestCpuUsage: %e, "
-                            + "maxRt: %d, "
-                            + "maxThread: %d, "
-                            + "maxQps: %e",
-                    checkSystemStatus.get(),
-                    highestSystemLoad,
-                    highestCpuUsage,
-                    maxRt,
-                    maxThread,
-                    qps));
+                    + "highestSystemLoad: %e, "
+                    + "highestCpuUsage: %e, "
+                    + "maxRt: %d, "
+                    + "maxThread: %d, "
+                    + "maxQps: %e",
+                checkSystemStatus.get(),
+                highestSystemLoad,
+                highestCpuUsage,
+                maxRt,
+                maxThread,
+                qps));
         }
 
         protected void restoreSetting() {
@@ -257,7 +257,7 @@ public final class SystemRuleManager {
         if (rule.getHighestCpuUsage() >= 0) {
             if (rule.getHighestCpuUsage() > 1) {
                 RecordLog.warn(String.format("[SystemRuleManager] Ignoring invalid SystemRule: "
-                        + "highestCpuUsage %.3f > 1", rule.getHighestCpuUsage()));
+                    + "highestCpuUsage %.3f > 1", rule.getHighestCpuUsage()));
             } else {
                 highestCpuUsage = Math.min(highestCpuUsage, rule.getHighestCpuUsage());
                 highestCpuUsageIsSet = true;
@@ -339,12 +339,11 @@ public final class SystemRuleManager {
         if (highestCpuUsageIsSet && getCurrentCpuUsage() > highestCpuUsage) {
             throw new SystemBlockException(resourceWrapper.getName(), "cpu");
         }
-
     }
 
     private static boolean checkBbr(int currentThread) {
         if (currentThread > 1 &&
-                currentThread > Constants.ENTRY_NODE.maxSuccessQps() * Constants.ENTRY_NODE.minRt() / 1000) {
+            currentThread > Constants.ENTRY_NODE.maxSuccessQps() * Constants.ENTRY_NODE.minRt() / 1000) {
             return false;
         }
         return true;
