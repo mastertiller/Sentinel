@@ -69,10 +69,12 @@ public class QLearningUpdateManager {
 
 
     private int getReward() {
-        if (qLearningMetric.getUtilityIncrease() >= 0) {
+        if (qLearningMetric.getUtilityIncrease() > 0.01) {
             return rewardValue;
-        } else {
+        } else if(qLearningMetric.getUtilityIncrease() < -0.01){
             return punishValue;
+        } else {
+            return 0;
         }
     }
 

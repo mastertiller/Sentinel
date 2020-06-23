@@ -33,9 +33,9 @@ public class QLearningTrainDemo {
     private static volatile boolean stop = false;
     private static final int threadCount = 100;//当前线程数
 
-    private static int seconds = 30;//整个程序运行时间
+    private static int seconds = 40;//整个程序运行时间
 
-    private static boolean isQLearning = false;
+    private static boolean isQLearning = true;
     //set a switch， when it is true it will employ Qlearnig algorithm. If not it will use BBR algorithm.
 
     public static void main(String[] args) throws Exception {

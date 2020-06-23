@@ -16,7 +16,7 @@ public class QLearningMetric {
 
     final int[] states = new int[]{stateA, stateB, stateC, stateD, stateE};
 
-    String[] stateNames = new String[]{"CPU Usage: (0%, 25%)", "CPU Usage: (25%, 50%)", "CPU Usage: (50%, 75%)", "CPU Usage: (75%, 100%)", "CPU Usage: UnGet"};
+    String[] stateNames = new String[]{"CPU Usage: UnGet", "CPU Usage: (0%, 25%)", "CPU Usage: (25%, 50%)", "CPU Usage: (50%, 75%)", "CPU Usage: (75%, 100%)"};
     String[] actionNames = new String[]{"Block", "Accept"};
 
     private volatile double utilityIncrease;
@@ -27,7 +27,7 @@ public class QLearningMetric {
     private volatile int actionsCount = 2;
     private volatile double[][] Q = new double[statesCount][actionsCount];
 
-    private volatile int maxTrainNum = 100000;
+    private volatile int maxTrainNum = 200000;
     private volatile boolean isTrain = true;
 
     private volatile int trainNum = 0; //当前训练到第几次
