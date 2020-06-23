@@ -18,6 +18,7 @@ package com.alibaba.csp.sentinel.slots.statistic;
 import java.util.Collection;
 
 import com.alibaba.csp.sentinel.node.Node;
+import com.alibaba.csp.sentinel.qlearning.QLearningUpdateManager;
 import com.alibaba.csp.sentinel.slotchain.ProcessorSlotEntryCallback;
 import com.alibaba.csp.sentinel.slotchain.ProcessorSlotExitCallback;
 import com.alibaba.csp.sentinel.slots.block.flow.PriorityWaitException;
@@ -48,13 +49,19 @@ import com.alibaba.csp.sentinel.slots.block.BlockException;
  * @author jialiang.linjl
  * @author Eric Zhao
  */
+
 @SpiOrder(-7000)
 public class StatisticSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
+
+    QLearningUpdateManager qLearningUpdateManager = new QLearningUpdateManager();
+
+//    QLearningMetric qLearningMetric = QLearningMetric.getInstance();
 
     @Override
     public void entry(Context context, ResourceWrapper resourceWrapper, DefaultNode node, int count,
                       boolean prioritized, Object... args) throws Throwable {
         try {
+
             // Do some checking.
             fireEntry(context, resourceWrapper, node, count, prioritized, args);
 
@@ -78,6 +85,7 @@ public class StatisticSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
             for (ProcessorSlotEntryCallback<DefaultNode> handler : StatisticSlotCallbackRegistry.getEntryCallbacks()) {
                 handler.onPass(context, resourceWrapper, node, count, args);
             }
+
         } catch (PriorityWaitException ex) {
             node.increaseThreadNum();
             if (context.getCurEntry().getOriginNode() != null) {
@@ -94,6 +102,7 @@ public class StatisticSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
                 handler.onPass(context, resourceWrapper, node, count, args);
             }
         } catch (BlockException e) {
+
             // Blocked, set block exception to current entry.
             context.getCurEntry().setBlockError(e);
 
@@ -112,8 +121,8 @@ public class StatisticSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
             for (ProcessorSlotEntryCallback<DefaultNode> handler : StatisticSlotCallbackRegistry.getEntryCallbacks()) {
                 handler.onBlocked(e, context, resourceWrapper, node, count, args);
             }
-
             throw e;
+
         } catch (Throwable e) {
             // Unexpected internal error, set error to current entry.
             context.getCurEntry().setError(e);
@@ -125,6 +134,17 @@ public class StatisticSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
     @Override
     public void exit(Context context, ResourceWrapper resourceWrapper, int count, Object... args) {
         Node node = context.getCurNode();
+
+        qLearningUpdateManager.setCurrentUtility(Constants.ENTRY_NODE.successQps(),Constants.ENTRY_NODE.avgRt());
+
+//        // 统计Ut = log(QPS) - log(RT)
+//        successQPS = Constants.ENTRY_NODE.successQps();
+//        avg_RT = Constants.ENTRY_NODE.avgRt();
+//        currentUtility = alpha * successQPS - beta * avg_RT;
+//        System.out.println("  ");
+//        System.out.println("*******************************************************" + currentUtility );
+//        System.out.println("CU = " + currentUtility );
+//        System.out.println("avgRT " + Constants.ENTRY_NODE.avgRt());
 
         if (context.getCurEntry().getBlockError() == null) {
             // Calculate response time (use completeStatTime as the time of completion).
@@ -140,6 +160,17 @@ public class StatisticSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
             if (resourceWrapper.getEntryType() == EntryType.IN) {
                 recordCompleteFor(Constants.ENTRY_NODE, count, rt, error);
             }
+
+            qLearningUpdateManager.qLearningProcess(Constants.ENTRY_NODE.successQps(),Constants.ENTRY_NODE.avgRt());
+//            System.out.println("---Accept--- " + qLearningUpdate.getCurrentUtility() + " next Utility = " + qLearningUpdate.getNextUtility());
+
+//            System.out.println( "_____Accept____ " + nextUtility + "               CU = " + currentUtility);
+//            System.out.println(this.testS.getTest());
+        } else {
+
+            qLearningUpdateManager.qLearningProcess(Constants.ENTRY_NODE.successQps(),Constants.ENTRY_NODE.avgRt());
+//            System.out.println("---block---" + qLearningUpdate.getCurrentUtility() + " next Utility = " + qLearningUpdate.getNextUtility());
+
         }
 
         // Handle exit event with registered exit callback handlers.
@@ -162,4 +193,7 @@ public class StatisticSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
             node.increaseExceptionQps(batchCount);
         }
     }
+
+
+
 }

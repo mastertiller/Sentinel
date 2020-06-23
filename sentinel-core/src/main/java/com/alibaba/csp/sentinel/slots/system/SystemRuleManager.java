@@ -17,6 +17,7 @@ package com.alibaba.csp.sentinel.slots.system;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -29,6 +30,7 @@ import com.alibaba.csp.sentinel.log.RecordLog;
 import com.alibaba.csp.sentinel.property.DynamicSentinelProperty;
 import com.alibaba.csp.sentinel.property.SentinelProperty;
 import com.alibaba.csp.sentinel.property.SimplePropertyListener;
+import com.alibaba.csp.sentinel.qlearning.QLearningMetric;
 import com.alibaba.csp.sentinel.slotchain.ResourceWrapper;
 import com.alibaba.csp.sentinel.slots.block.BlockException;
 
@@ -65,6 +67,9 @@ import com.alibaba.csp.sentinel.slots.block.BlockException;
  */
 public final class SystemRuleManager {
 
+    private static volatile int currentState;
+    static QLearningMetric qLearningMetric = QLearningMetric.getInstance();
+
     private static volatile double highestSystemLoad = Double.MAX_VALUE;
     /**
      * cpu usage, between [0, 1]
@@ -90,7 +95,7 @@ public final class SystemRuleManager {
 
     @SuppressWarnings("PMD.ThreadPoolCreationRule")
     private final static ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1,
-        new NamedThreadFactory("sentinel-system-status-record-task", true));
+            new NamedThreadFactory("sentinel-system-status-record-task", true));
 
     static {
         checkSystemStatus.set(false);
@@ -318,8 +323,13 @@ public final class SystemRuleManager {
             throw new SystemBlockException(resourceWrapper.getName(), "rt");
         }
 
-        // load. BBR algorithm.
-        if (highestSystemLoadIsSet && getCurrentSystemAvgLoad() > highestSystemLoad) {
+        //
+        if (qLearningMetric.isQLearning()) {
+            currentState = locateState(statusListener.getCpuUsage());
+            if (!chooseAction(currentState)) {
+                throw new SystemBlockException(resourceWrapper.getName(), "q-learning");
+            }
+        } else if (highestSystemLoadIsSet && getCurrentSystemAvgLoad() > highestSystemLoad) {   // load. BBR algorithm.
             if (!checkBbr(currentThread)) {
                 throw new SystemBlockException(resourceWrapper.getName(), "load");
             }
@@ -329,6 +339,7 @@ public final class SystemRuleManager {
         if (highestCpuUsageIsSet && getCurrentCpuUsage() > highestCpuUsage) {
             throw new SystemBlockException(resourceWrapper.getName(), "cpu");
         }
+
     }
 
     private static boolean checkBbr(int currentThread) {
@@ -338,6 +349,62 @@ public final class SystemRuleManager {
         }
         return true;
     }
+
+    /**
+     *
+     * @return
+     */
+    public static synchronized int locateState(double currentCpuUsage) {
+
+        if (0 <= currentCpuUsage && currentCpuUsage < 0.25) {
+            qLearningMetric.setState(1);
+            return qLearningMetric.getState();
+        }
+        if (0.25 <= currentCpuUsage && currentCpuUsage < 0.5) {
+            qLearningMetric.setState(2);
+            return qLearningMetric.getState();
+        }
+        if (0.5 <= currentCpuUsage && currentCpuUsage < 0.75) {
+            qLearningMetric.setState(3);
+            return qLearningMetric.getState();
+        }
+        if (0.75 <= currentCpuUsage && currentCpuUsage <= 1) {
+            qLearningMetric.setState(4);
+            return qLearningMetric.getState();
+        }
+
+        qLearningMetric.setState(0);
+        return qLearningMetric.getState();
+    }
+
+
+    /**
+     *
+     * @param currentState
+     * @return
+     */
+    public static boolean chooseAction(int currentState) {
+        if (qLearningMetric.isTrain()) {
+            //
+            boolean randAction = new Random().nextBoolean();
+//        System.out.println("**************************" + randAction);
+            if (randAction) {
+                qLearningMetric.setAction(1);
+                return true;
+            }
+            qLearningMetric.setAction(0);
+            return false;
+        } else {
+            //
+            if (qLearningMetric.policy(currentState) == 1) {
+                qLearningMetric.setAction(1);
+                return true;
+            }
+            qLearningMetric.setAction(0);
+            return false;
+        }
+    }
+
 
     public static double getCurrentSystemAvgLoad() {
         return statusListener.getSystemAverageLoad();
