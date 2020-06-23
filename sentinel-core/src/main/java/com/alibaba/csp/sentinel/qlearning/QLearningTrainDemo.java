@@ -15,7 +15,10 @@ import com.alibaba.csp.sentinel.SphU;
 import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.alibaba.csp.sentinel.slots.system.SystemRule;
 import com.alibaba.csp.sentinel.slots.system.SystemRuleManager;
+/*
 
+
+ */
 
 public class QLearningTrainDemo {
 
@@ -29,11 +32,12 @@ public class QLearningTrainDemo {
     private static ArrayList<Double> qpsArray = new ArrayList<Double>();
 
     private static volatile boolean stop = false;
-    private static final int threadCount = 100;
+    private static final int threadCount = 100;//当前线程数
 
-    private static int seconds = 30;
+    private static int seconds = 30;//整个程序运行时间
 
-    private static boolean isQLearning = false;//
+    private static boolean isQLearning = false;
+    //set a switch， when it is true it will employ Qlearnig algorithm. If not it will use BBR algorithm.
 
     public static void main(String[] args) throws Exception {
 
@@ -138,8 +142,8 @@ public class QLearningTrainDemo {
                 oldBlock = globalBlock;
 
                 System.out.print(seconds + ", " + TimeUtil.currentTimeMillis() + ", total:"
-                    + oneSecondTotal + ", pass:"
-                    + oneSecondPass + ", block:" + oneSecondBlock);
+                        + oneSecondTotal + ", pass:"
+                        + oneSecondPass + ", block:" + oneSecondBlock);
                 if (qLearningMetric.isQLearning() && qLearningMetric.isTrain()){
                     System.out.println(" ------now is training------ ");
                 }

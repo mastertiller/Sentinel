@@ -4,7 +4,7 @@ import com.alibaba.csp.sentinel.Constants;
 import com.alibaba.csp.sentinel.slots.system.SystemRuleManager;
 
 /**
- *
+ *该类包含了很多更新Q值的方法
  */
 public class QLearningUpdateManager {
     QLearningMetric qLearningMetric = QLearningMetric.getInstance();
@@ -24,7 +24,9 @@ public class QLearningUpdateManager {
     public  double nextUtility;
     public  double utilityIncrease;
 
-
+    /**
+     *更新Q值
+     */
     public  void qLearningProcess(double successQPS, double avgRt){
         //
         if(qLearningMetric.isQLearning() && qLearningMetric.isTrain()) {
@@ -67,7 +69,7 @@ public class QLearningUpdateManager {
 
         double maxQ = qLearningMetric.getmaxQ(nextState);
 
-        double qValue = q + delta * (reward + gamma * maxQ - q);
+        double qValue = q + delta * (reward + gamma * maxQ - q);//delta决定了奖励和下一状态的期望值的影响程度 gamma决定了maxQ的影响程度
 
         qLearningMetric.setQ(state, action, qValue);
     }

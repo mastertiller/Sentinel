@@ -200,17 +200,17 @@ public final class SystemRuleManager {
             }
 
             RecordLog.info(String.format("[SystemRuleManager] Current system check status: %s, "
-                    + "highestSystemLoad: %e, "
-                    + "highestCpuUsage: %e, "
-                    + "maxRt: %d, "
-                    + "maxThread: %d, "
-                    + "maxQps: %e",
-                checkSystemStatus.get(),
-                highestSystemLoad,
-                highestCpuUsage,
-                maxRt,
-                maxThread,
-                qps));
+                            + "highestSystemLoad: %e, "
+                            + "highestCpuUsage: %e, "
+                            + "maxRt: %d, "
+                            + "maxThread: %d, "
+                            + "maxQps: %e",
+                    checkSystemStatus.get(),
+                    highestSystemLoad,
+                    highestCpuUsage,
+                    maxRt,
+                    maxThread,
+                    qps));
         }
 
         protected void restoreSetting() {
@@ -257,7 +257,7 @@ public final class SystemRuleManager {
         if (rule.getHighestCpuUsage() >= 0) {
             if (rule.getHighestCpuUsage() > 1) {
                 RecordLog.warn(String.format("[SystemRuleManager] Ignoring invalid SystemRule: "
-                    + "highestCpuUsage %.3f > 1", rule.getHighestCpuUsage()));
+                        + "highestCpuUsage %.3f > 1", rule.getHighestCpuUsage()));
             } else {
                 highestCpuUsage = Math.min(highestCpuUsage, rule.getHighestCpuUsage());
                 highestCpuUsageIsSet = true;
@@ -323,7 +323,7 @@ public final class SystemRuleManager {
             throw new SystemBlockException(resourceWrapper.getName(), "rt");
         }
 
-        //
+        //Using Qlearning or BBR?
         if (qLearningMetric.isQLearning()) {
             currentState = locateState(statusListener.getCpuUsage());
             if (!chooseAction(currentState)) {
@@ -344,13 +344,15 @@ public final class SystemRuleManager {
 
     private static boolean checkBbr(int currentThread) {
         if (currentThread > 1 &&
-            currentThread > Constants.ENTRY_NODE.maxSuccessQps() * Constants.ENTRY_NODE.minRt() / 1000) {
+                currentThread > Constants.ENTRY_NODE.maxSuccessQps() * Constants.ENTRY_NODE.minRt() / 1000) {
             return false;
         }
         return true;
     }
 
     /**
+     *通过Cpu使用率来判断当前所处的状态，返回值为qlearning算法里的当前状态
+     * Judging current state by cpu usage，it is current state which is in the Qlearning algorithm。
      *
      * @return
      */
@@ -379,13 +381,12 @@ public final class SystemRuleManager {
 
 
     /**
+     *如果Qlearning正在训练，则随机选择动作，如果action = 0 执行block 如果 action= 1.执行accept
      *
-     * @param currentState
-     * @return
      */
     public static boolean chooseAction(int currentState) {
         if (qLearningMetric.isTrain()) {
-            //
+            //如果Qlearning正在训练，则随机选择动作，如果action = 0 执行block 如果 action= 1.执行accept
             boolean randAction = new Random().nextBoolean();
 //        System.out.println("**************************" + randAction);
             if (randAction) {
@@ -395,7 +396,7 @@ public final class SystemRuleManager {
             qLearningMetric.setAction(0);
             return false;
         } else {
-            //
+            //会从已经训练出来的policy当中选出 最大奖励期望值的action
             if (qLearningMetric.policy(currentState) == 1) {
                 qLearningMetric.setAction(1);
                 return true;

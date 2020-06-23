@@ -53,7 +53,7 @@ import com.alibaba.csp.sentinel.slots.block.BlockException;
 @SpiOrder(-7000)
 public class StatisticSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
 
-    QLearningUpdateManager qLearningUpdateManager = new QLearningUpdateManager();
+    QLearningUpdateManager qLearningUpdateManager = new QLearningUpdateManager();//管理存储 和 执行 qlearning的方法
 
 //    QLearningMetric qLearningMetric = QLearningMetric.getInstance();
 
@@ -64,6 +64,7 @@ public class StatisticSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
 
             // Do some checking.
             fireEntry(context, resourceWrapper, node, count, prioritized, args);
+            //jump to SystemRuleManager to execute its check or others.
 
             // Request passed, add thread count and pass count.
             node.increaseThreadNum();
@@ -135,7 +136,7 @@ public class StatisticSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
     public void exit(Context context, ResourceWrapper resourceWrapper, int count, Object... args) {
         Node node = context.getCurNode();
 
-        qLearningUpdateManager.setCurrentUtility(Constants.ENTRY_NODE.successQps(),Constants.ENTRY_NODE.avgRt());
+        qLearningUpdateManager.setCurrentUtility(Constants.ENTRY_NODE.successQps(),Constants.ENTRY_NODE.avgRt());//效用方程
 
 //        // 统计Ut = log(QPS) - log(RT)
 //        successQPS = Constants.ENTRY_NODE.successQps();

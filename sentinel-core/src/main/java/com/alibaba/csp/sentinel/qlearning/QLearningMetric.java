@@ -1,7 +1,7 @@
 package com.alibaba.csp.sentinel.qlearning;
 
 /**
- *
+ * 该类为单例模式，保证了全局变量只能够访问一个公有对象 通过内部类来实现
  */
 public class QLearningMetric {
 
@@ -31,10 +31,10 @@ public class QLearningMetric {
     private  volatile int maxTrainNum = 100000;
     private  volatile boolean isTrain = true;
 
-    private  volatile int trainNum = 0; //
+    private  volatile int trainNum = 0; //当前训练到第几次
 
-    private  double alpha = 1;//
-    private  double beta = 0.02;
+    private  double alpha = 1;//alpha控制了效用方程的qps的参数
+    private  double beta = 0.02;//控制了效用方程的RT的参数
 
     private  double delta = 1;
     private  double gamma = 1;
