@@ -34,6 +34,7 @@ public class SystemSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
     @Override
     public void entry(Context context, ResourceWrapper resourceWrapper, DefaultNode node, int count,
                       boolean prioritized, Object... args) throws Throwable {
+//        System.out.println(" system slot. ");
         SystemRuleManager.checkSystem(resourceWrapper);
         fireEntry(context, resourceWrapper, node, count, prioritized, args);
     }

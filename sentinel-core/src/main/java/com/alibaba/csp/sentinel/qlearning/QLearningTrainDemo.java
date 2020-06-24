@@ -88,16 +88,16 @@ public class QLearningTrainDemo {
     private static void initSystemRule() {
         List<SystemRule> rules = new ArrayList<SystemRule>();
         SystemRule rule = new SystemRule();
-        // max load is 3
-        rule.setHighestSystemLoad(3.0);
+//        // max load is 3
+//        rule.setHighestSystemLoad(3.0);
         //max cpu usage is 60%
-        rule.setHighestCpuUsage(0.9);
-        //max avg rt of all request is 10 ms
-        rule.setAvgRt(20);
-        //max total qps is 20
-        rule.setQps(500);
-        //max parallel working thread is 10
-        rule.setMaxThread(100);
+        rule.setHighestCpuUsage(1);
+//        //max avg rt of all request is 10 ms
+//        rule.setAvgRt(20);
+//        //max total qps is 20
+//        rule.setQps(500);
+//        //max parallel working thread is 10
+//        rule.setMaxThread(100);
 
         rules.add(rule);
         SystemRuleManager.loadRules(Collections.singletonList(rule));

@@ -33,6 +33,9 @@ import com.alibaba.csp.sentinel.property.SimplePropertyListener;
 import com.alibaba.csp.sentinel.qlearning.QLearningMetric;
 import com.alibaba.csp.sentinel.slotchain.ResourceWrapper;
 import com.alibaba.csp.sentinel.slots.block.BlockException;
+import com.alibaba.csp.sentinel.slots.block.RuleConstant;
+import com.alibaba.csp.sentinel.slots.block.flow.FlowRule;
+import com.alibaba.csp.sentinel.slots.block.flow.FlowRuleManager;
 
 /**
  * <p>
@@ -323,13 +326,7 @@ public final class SystemRuleManager {
             throw new SystemBlockException(resourceWrapper.getName(), "rt");
         }
 
-        //Using Qlearning or BBR?
-        if (qLearningMetric.isQLearning()) {
-            currentState = locateState(statusListener.getCpuUsage());
-            if (!chooseAction(currentState)) {
-                throw new SystemBlockException(resourceWrapper.getName(), "q-learning");
-            }
-        } else if (highestSystemLoadIsSet && getCurrentSystemAvgLoad() > highestSystemLoad) {   // load. BBR algorithm.
+        if (highestSystemLoadIsSet && getCurrentSystemAvgLoad() > highestSystemLoad) {   // load. BBR algorithm.
             if (!checkBbr(currentThread)) {
                 throw new SystemBlockException(resourceWrapper.getName(), "load");
             }
@@ -348,63 +345,6 @@ public final class SystemRuleManager {
         }
         return true;
     }
-
-    /**
-     *通过Cpu使用率来判断当前所处的状态，返回值为qlearning算法里的当前状态
-     * Judging current state by cpu usage，it is current state which is in the Qlearning algorithm。
-     *
-     * @return
-     */
-    public static synchronized int locateState(double currentCpuUsage) {
-
-        if (0 <= currentCpuUsage && currentCpuUsage < 0.25) {
-            qLearningMetric.setState(1);
-            return qLearningMetric.getState();
-        }
-        if (0.25 <= currentCpuUsage && currentCpuUsage < 0.5) {
-            qLearningMetric.setState(2);
-            return qLearningMetric.getState();
-        }
-        if (0.5 <= currentCpuUsage && currentCpuUsage < 0.75) {
-            qLearningMetric.setState(3);
-            return qLearningMetric.getState();
-        }
-        if (0.75 <= currentCpuUsage && currentCpuUsage <= 1) {
-            qLearningMetric.setState(4);
-            return qLearningMetric.getState();
-        }
-
-        qLearningMetric.setState(0);
-        return qLearningMetric.getState();
-    }
-
-
-    /**
-     *如果Qlearning正在训练，则随机选择动作，如果action = 0 执行block 如果 action= 1.执行accept
-     *
-     */
-    public static boolean chooseAction(int currentState) {
-        if (qLearningMetric.isTrain()) {
-            //如果Qlearning正在训练，则随机选择动作，如果action = 0 执行block 如果 action= 1.执行accept
-            boolean randAction = new Random().nextBoolean();
-//        System.out.println("**************************" + randAction);
-            if (randAction) {
-                qLearningMetric.setAction(1);
-                return true;
-            }
-            qLearningMetric.setAction(0);
-            return false;
-        } else {
-            //会从已经训练出来的policy当中选出 最大奖励期望值的action
-            if (qLearningMetric.policy(currentState) == 1) {
-                qLearningMetric.setAction(1);
-                return true;
-            }
-            qLearningMetric.setAction(0);
-            return false;
-        }
-    }
-
 
     public static double getCurrentSystemAvgLoad() {
         return statusListener.getSystemAverageLoad();

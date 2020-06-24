@@ -59,6 +59,8 @@ public class StatisticSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
     public void entry(Context context, ResourceWrapper resourceWrapper, DefaultNode node, int count,
                       boolean prioritized, Object... args) throws Throwable {
         try {
+//            System.out.println(" statistic slot. -----entry-----");
+
             // Do some checking.
             fireEntry(context, resourceWrapper, node, count, prioritized, args);
 
@@ -130,6 +132,16 @@ public class StatisticSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
     public void exit(Context context, ResourceWrapper resourceWrapper, int count, Object... args) {
         Node node = context.getCurNode();
 
+//        System.out.println(" statistic slot. -----exit-----");
+        //检查已经执行了行为后是否得到效用，需要更新Q值
+        qLearningUpdateManager.qLearningUpdate(Constants.ENTRY_NODE.successQps(),Constants.ENTRY_NODE.avgRt());
+
+
+        qLearningUpdateManager.takeAction(resourceWrapper.getName());
+
+
+//        System.out.println(resourceWrapper.getName());
+
         qLearningUpdateManager.setCurrentUtility(Constants.ENTRY_NODE.successQps(),Constants.ENTRY_NODE.avgRt());//效用方程
 
         // 统计Ut = log(QPS) - log(RT)
@@ -155,9 +167,8 @@ public class StatisticSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
             if (resourceWrapper.getEntryType() == EntryType.IN) {
                 recordCompleteFor(Constants.ENTRY_NODE, count, rt, error);
             }
-            qLearningUpdateManager.qLearningProcess(Constants.ENTRY_NODE.successQps(),Constants.ENTRY_NODE.avgRt());
+
         } else {
-            qLearningUpdateManager.qLearningProcess(Constants.ENTRY_NODE.successQps(),Constants.ENTRY_NODE.avgRt());
 
         }
 
