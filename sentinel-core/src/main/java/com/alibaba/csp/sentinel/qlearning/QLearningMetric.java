@@ -29,7 +29,7 @@ public class QLearningMetric {
     final int[] actionValues = new int[]{0,acceptValue, -1*blockValue};
 
     String[] stateNames = new String[]{"CPU Usage: UnGet", "CPU Usage: (0%, 25%)", "CPU Usage: (25%, 50%)", "CPU Usage: (50%, 75%)", "CPU Usage: (75%, 100%)"};
-    String[] actionNames = new String[]{"Block", "Accept"};
+    String[] actionNames = new String[]{"Unchange","Accept", "Block"};
 
     private volatile double utilityIncrease;
     private volatile int state;
@@ -193,12 +193,14 @@ public class QLearningMetric {
         return updateIntervalCount;
     }
 
-    public void setUpdateIntervalCount(int updateIntervalCount) {
+    public synchronized void setUpdateIntervalCount(int updateIntervalCount) {
         this.updateIntervalCount = updateIntervalCount;
     }
 
     public synchronized void addUpdateIntervalCount(){
-        this.updateIntervalCount = this.updateIntervalCount + 1;
+//        System.out.print(updateIntervalCount + " ------------------- ");
+        this.updateIntervalCount = updateIntervalCount + 1;
+//        System.out.println(updateIntervalCount);
     }
 
     public void showPolicy() {
@@ -320,16 +322,20 @@ public class QLearningMetric {
         return utility;
     }
 
-    public boolean isUpdate(){
+    public synchronized boolean isUpdate(){
         if(getTrainNum() > 0) {
             addUpdateIntervalCount();
+//            System.out.print(updateIntervalCount);
             if (getUpdateIntervalCount() < getUpdateInterval()) {
                 return false;
             } else if (getUpdateIntervalCount() == getUpdateInterval()) {
                 setUpdateIntervalCount(0);
                 return true;
             }
-            System.out.println(" error in isUpdate().");
+            else {
+                setUpdateIntervalCount(0);
+                System.out.println(" error in isUpdate().");
+            }
         }
         return false;
 

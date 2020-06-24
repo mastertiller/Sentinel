@@ -6,6 +6,7 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.alibaba.csp.sentinel.Constants;
 import com.alibaba.csp.sentinel.util.TimeUtil;
 import com.alibaba.csp.sentinel.Entry;
 import com.alibaba.csp.sentinel.SphU;
@@ -16,21 +17,31 @@ import com.alibaba.csp.sentinel.slots.block.flow.FlowRuleManager;
 
 public class QLearningDemo {
 
+
     private static final String KEY = "abc";
 
     private static AtomicInteger pass = new AtomicInteger();
     private static AtomicInteger block = new AtomicInteger();
     private static AtomicInteger total = new AtomicInteger();
 
+    private static ArrayList<Double> avgRTArray = new ArrayList<Double>();
+    private static ArrayList<Double> qpsArray = new ArrayList<Double>();
+
     private static volatile boolean stop = false;
 
     private static final int threadCount = 32;
 
-    private static int seconds = 60 + 40;
+    private static int seconds = 40;
 
     private static QLearningMetric qLearningMetric = QLearningMetric.getInstance();
 
+    private static boolean isQLearning = true;
+    //set a switch， when it is true it will employ Qlearnig algorithm. If not it will use BBR algorithm.
+
     public static void main(String[] args) throws Exception {
+
+        qLearningMetric.setQLearning(isQLearning);
+
         initFlowQpsRule();
 
         tick();
@@ -47,14 +58,14 @@ public class QLearningDemo {
         FlowRule rule1 = new FlowRule();
         rule1.setResource(KEY);
         // set limit qps to 20
-        rule1.setCount(200);
+        rule1.setCount(1200);
         rule1.setGrade(RuleConstant.FLOW_GRADE_QPS);
         rule1.setLimitApp("default");
         rules.add(rule1);
         FlowRule rule2 = new FlowRule();
         rule2.setResource(KEY);
         // set limit qps to 20
-        rule2.setCount(100);
+        rule2.setCount(3000);
         rule2.setGrade(RuleConstant.FLOW_GRADE_QPS);
         rule2.setLimitApp("default");
         rules.add(rule2);
@@ -91,6 +102,12 @@ public class QLearningDemo {
                     TimeUnit.SECONDS.sleep(1);
                 } catch (InterruptedException e) {
                 }
+                double avgRt = Constants.ENTRY_NODE.avgRt();
+                double successQps = Constants.ENTRY_NODE.successQps();
+
+                avgRTArray.add(avgRt);
+                qpsArray.add(successQps);
+
                 long globalTotal = total.get();
                 long oneSecondTotal = globalTotal - oldTotal;
                 oldTotal = globalTotal;
@@ -104,9 +121,14 @@ public class QLearningDemo {
                 oldBlock = globalBlock;
 
                 System.out.println(seconds + " send qps is: " + oneSecondTotal);
-                System.out.println(TimeUtil.currentTimeMillis() + ", total:" + oneSecondTotal
+                System.out.print(TimeUtil.currentTimeMillis() + ", total:" + oneSecondTotal
                         + ", pass:" + oneSecondPass
                         + ", block:" + oneSecondBlock);
+                if (qLearningMetric.isQLearning() && qLearningMetric.isTrain()) {
+                    System.out.println(" ------now is training------ ");
+                } else {
+                    System.out.println();
+                }
 
                 if (seconds-- <= 0) {
                     stop = true;
@@ -117,8 +139,24 @@ public class QLearningDemo {
             System.out.println("time cost: " + cost + " ms");
             System.out.println("total:" + total.get() + ", pass:" + pass.get()
                     + ", block:" + block.get());
+
+
+            printArray(avgRTArray, "Average RT");
+            printArray(qpsArray, "Success QPS");
+            if (qLearningMetric.isQLearning()){
+                qLearningMetric.showPolicy();
+            }
             System.exit(0);
         }
+    }
+    private static void printArray(List<Double> array, String name) {
+        System.out.println(name + " result:");
+        System.out.print("[");
+        for (double val : array) {
+            System.out.print(val + ", ");
+        }
+        System.out.print("]");
+        System.out.println();
     }
 
     static class RunTask implements Runnable {

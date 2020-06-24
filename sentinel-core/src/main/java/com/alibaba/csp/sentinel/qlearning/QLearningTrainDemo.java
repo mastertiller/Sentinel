@@ -5,6 +5,9 @@ import com.alibaba.csp.sentinel.Entry;
 import com.alibaba.csp.sentinel.EntryType;
 import com.alibaba.csp.sentinel.SphU;
 import com.alibaba.csp.sentinel.slots.block.BlockException;
+import com.alibaba.csp.sentinel.slots.block.RuleConstant;
+import com.alibaba.csp.sentinel.slots.block.flow.FlowRule;
+import com.alibaba.csp.sentinel.slots.block.flow.FlowRuleManager;
 import com.alibaba.csp.sentinel.slots.system.SystemRule;
 import com.alibaba.csp.sentinel.slots.system.SystemRuleManager;
 import com.alibaba.csp.sentinel.util.TimeUtil;
@@ -22,6 +25,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class QLearningTrainDemo {
 
     static QLearningMetric qLearningMetric = QLearningMetric.getInstance();
+
+    private static final String KEY = "abc";
 
     private static AtomicInteger pass = new AtomicInteger();
     private static AtomicInteger block = new AtomicInteger();
@@ -86,21 +91,39 @@ public class QLearningTrainDemo {
     }
 
     private static void initSystemRule() {
-        List<SystemRule> rules = new ArrayList<SystemRule>();
-        SystemRule rule = new SystemRule();
-//        // max load is 3
-//        rule.setHighestSystemLoad(3.0);
-        //max cpu usage is 60%
-        rule.setHighestCpuUsage(1);
-//        //max avg rt of all request is 10 ms
-//        rule.setAvgRt(20);
-//        //max total qps is 20
-//        rule.setQps(500);
-//        //max parallel working thread is 10
-//        rule.setMaxThread(100);
+//        List<SystemRule> rules = new ArrayList<SystemRule>();
+//        SystemRule rule = new SystemRule();
+////        // max load is 3
+////        rule.setHighestSystemLoad(3.0);
+//        //max cpu usage is 60%
+//        rule.setHighestCpuUsage(1);
+////        //max avg rt of all request is 10 ms
+////        rule.setAvgRt(20);
+////        //max total qps is 20
+////        rule.setQps(500);
+////        //max parallel working thread is 10
+////        rule.setMaxThread(100);
+//
+//        rules.add(rule);
+//        SystemRuleManager.loadRules(Collections.singletonList(rule));
 
-        rules.add(rule);
-        SystemRuleManager.loadRules(Collections.singletonList(rule));
+        List<FlowRule> rulesN = new ArrayList<FlowRule>();
+        FlowRule rule1 = new FlowRule();
+        rule1.setResource("methodA");
+        // set limit qps to 20
+        rule1.setCount(3000);
+        rule1.setGrade(RuleConstant.FLOW_GRADE_QPS);
+        rule1.setLimitApp("default");
+        rulesN.add(rule1);
+        FlowRule rule2 = new FlowRule();
+        rule2.setResource("methodA");
+        // set limit qps to 20
+        rule2.setCount(1500);
+        rule2.setGrade(RuleConstant.FLOW_GRADE_QPS);
+        rule2.setLimitApp("default");
+        rulesN.add(rule2);
+        qLearningMetric.setRules(rulesN);
+        FlowRuleManager.loadRules(rulesN);
     }
 
     private static void tick() {

@@ -27,11 +27,13 @@ public class QLearningUpdateManager {
 
 
     public void takeAction(String resourceWrapperName){
-
+//        if(qLearningMetric.isQLearning()){
+//            System.out.println(" in take action ().");
+//        }
         //Using Qlearning or BBR?
         if (qLearningMetric.isQLearning() && qLearningMetric.ifTakeAction()) {
             qLearningMetric.addTrainNum();
-
+//            System.out.println(" in take action ().");
             int actionValue = chooseAction();
 
             //通过改变QPS限流规则来更改Accept和Block的数量
@@ -42,7 +44,7 @@ public class QLearningUpdateManager {
             }
             FlowRule rule1 = new FlowRule();
             rule1.setResource(resourceWrapperName);
-            rule1.setCount(Constants.ENTRY_NODE.successQps() + actionValue);
+            rule1.setCount(Constants.ENTRY_NODE.maxSuccessQps() + actionValue);
             rule1.setGrade(RuleConstant.FLOW_GRADE_QPS);
             rule1.setLimitApp("default");
             newRules.add(rule1);
