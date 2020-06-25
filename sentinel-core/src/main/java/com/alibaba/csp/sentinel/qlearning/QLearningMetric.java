@@ -71,7 +71,7 @@ public class QLearningMetric {
         return updateInterval;
     }
 
-    private int updateInterval = acceptValue;
+    private int updateInterval = actionInterval - 1;
     private int updateIntervalCount = 0;
 
 
@@ -114,13 +114,24 @@ public class QLearningMetric {
 
     private int actionIntervalCount = 0;
 
+    public synchronized void setCurrentUtility(double currentUtility) {
+        this.currentUtility = currentUtility;
+    }
+
+    public synchronized void setNextUtility(double nextUtility) {
+        this.nextUtility = nextUtility;
+    }
+
+    private double currentUtility;
+    private double nextUtility;
+
 
     private QLearningMetric() {
 
     }
 
-    public synchronized void setUtilityIncrease(double utilityIncrease) {
-        this.utilityIncrease = utilityIncrease;
+    public synchronized void recordUtilityIncrease() {
+        this.utilityIncrease = this.nextUtility - this.currentUtility;
     }
 
     public double getUtilityIncrease() {
@@ -152,11 +163,11 @@ public class QLearningMetric {
         return action;
     }
 
-    public void setQ(int s, int a, double value) {
+    public synchronized void setQ(int s, int a, double value) {
         Q[s][a] = value;
     }
 
-    public double getmaxQ(int nextState) {
+    public synchronized double getmaxQ(int nextState) {
 
         double maxValue = Double.MIN_VALUE;
         for (int i = 0; i < actionsCount; i++) {
@@ -181,7 +192,13 @@ public class QLearningMetric {
         return maxTrainNum;
     }
 
-    public boolean isTrain() {
+    public synchronized boolean isTrain() {
+        if(this.trainNum <= this.maxTrainNum){
+            this.isTrain = true;
+        }
+        else{
+            this.isTrain = false;
+        }
         return isTrain;
     }
 
@@ -323,19 +340,20 @@ public class QLearningMetric {
     }
 
     public synchronized boolean isUpdate(){
-        if(getTrainNum() > 0) {
-            addUpdateIntervalCount();
+        if(getTrainNum() > 0 && getActionIntervalCount() == updateInterval) {
+//            addUpdateIntervalCount();
 //            System.out.print(updateIntervalCount);
-            if (getUpdateIntervalCount() < getUpdateInterval()) {
-                return false;
-            } else if (getUpdateIntervalCount() == getUpdateInterval()) {
-                setUpdateIntervalCount(0);
-                return true;
-            }
-            else {
-                setUpdateIntervalCount(0);
-                System.out.println(" error in isUpdate().");
-            }
+//            if (getUpdateIntervalCount() < getUpdateInterval()) {
+//                return false;
+//            } else if (getUpdateIntervalCount() == getUpdateInterval()) {
+//                setUpdateIntervalCount(0);
+//                return true;
+//            }
+//            else {
+//                setUpdateIntervalCount(0);
+//                System.out.println(" error in isUpdate().");
+//            }
+            return true;
         }
         return false;
 

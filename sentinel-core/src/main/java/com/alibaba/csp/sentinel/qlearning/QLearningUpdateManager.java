@@ -8,7 +8,6 @@ import com.alibaba.csp.sentinel.slots.system.SystemRuleManager;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 /**
  * 该类包含了很多更新Q值的方法
@@ -26,11 +25,13 @@ public class QLearningUpdateManager {
 
 
 
-    public void takeAction(String resourceWrapperName){
+    public synchronized void takeAction(String resourceWrapperName){
 //        if(qLearningMetric.isQLearning()){
 //            System.out.println(" in take action ().");
 //        }
         //Using Qlearning or BBR?
+
+        // 不用判断isTrain().仅当QLearning为true，且actionIntervalCount为10的倍数时，返回true。
         if (qLearningMetric.isQLearning() && qLearningMetric.ifTakeAction()) {
             qLearningMetric.addTrainNum();
 //            System.out.println(" in take action ().");
@@ -44,9 +45,9 @@ public class QLearningUpdateManager {
             }
             FlowRule rule1 = new FlowRule();
             rule1.setResource(resourceWrapperName);
-            rule1.setCount(Constants.ENTRY_NODE.maxSuccessQps() + actionValue);
+            rule1.setCount(Constants.ENTRY_NODE.successQps() + actionValue);
             rule1.setGrade(RuleConstant.FLOW_GRADE_QPS);
-            rule1.setLimitApp("default");
+            rule1.setLimitApp("default"); //注意要与oldRules一致。
             newRules.add(rule1);
             FlowRuleManager.loadRules(newRules);
 //            if (!chooseAction(currentState)) {
@@ -62,7 +63,7 @@ public class QLearningUpdateManager {
      *如果Qlearning正在训练，则随机选择动作，如果action = 0 执行block 如果 action= 1.执行accept
      *
      */
-    public int chooseAction() {
+    public synchronized int chooseAction() {
         if (qLearningMetric.isTrain()) {
             //如果Qlearning正在训练，则随机选择动作，如果action = 0 执行block 如果 action= 1.执行accept
 
@@ -83,31 +84,30 @@ public class QLearningUpdateManager {
     /**
      * 执行完Action并发挥效用后，计算奖励并更新Q值
      */
-    public void qLearningUpdate(double successQPS, double avgRt) {
+    public synchronized void qLearningUpdate(double successQPS, double avgRt) {
         if (qLearningMetric.isQLearning() && qLearningMetric.isTrain() && qLearningMetric.isUpdate()) {
-            if (qLearningMetric.getTrainNum() <= qLearningMetric.getMaxTrainNum()) {
-
-                // 记录当前的增量。
-                recordUtilityIncrease(successQPS, avgRt);
-
-                qLearningMetric.updateQ();
-            } else {
-                qLearningMetric.setTrain(false);
-                //System.out.println("-------------------TRAINING END--------------------");
-                //qLearningMetric.showPolicy();
-                //System.out.println(" ");
-            }
+            // 记录当前的增量。
+            recordUtilityIncrease(successQPS, avgRt);
+            qLearningMetric.updateQ();
+//            } else {
+//                qLearningMetric.setTrain(false);
+//                //System.out.println("-------------------TRAINING END--------------------");
+//                //qLearningMetric.showPolicy();
+//                //System.out.println(" ");
+//            }
         }
     }
 
-    private void recordUtilityIncrease(double successQPS, double avgRt) {
+    private synchronized void recordUtilityIncrease(double successQPS, double avgRt) {
         nextUtility = qLearningMetric.calculateUtility(successQPS, avgRt);
-        utilityIncrease = nextUtility - currentUtility;
-        qLearningMetric.setUtilityIncrease(utilityIncrease);
+        qLearningMetric.setNextUtility(nextUtility);
+
+        qLearningMetric.recordUtilityIncrease();
     }
 
     public void setCurrentUtility(double successQPS,double avgRt){
         currentUtility = qLearningMetric.calculateUtility(successQPS,avgRt);
+        qLearningMetric.setCurrentUtility(currentUtility);
     }
 
 

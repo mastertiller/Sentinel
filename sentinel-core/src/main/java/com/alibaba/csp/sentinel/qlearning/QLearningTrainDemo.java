@@ -61,14 +61,14 @@ public class QLearningTrainDemo {
                             entry = SphU.entry("methodA", EntryType.IN);
                             pass.incrementAndGet();
                             try {
-                                TimeUnit.MILLISECONDS.sleep(10);
+                                TimeUnit.MILLISECONDS.sleep(50);
                             } catch (InterruptedException e) {
                                 // ignore
                             }
                         } catch (BlockException e1) {
                             block.incrementAndGet();
                             try {
-                                TimeUnit.MILLISECONDS.sleep(10);
+                                TimeUnit.MILLISECONDS.sleep(50);
                             } catch (InterruptedException e) {
                                 // ignore
                             }

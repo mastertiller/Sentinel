@@ -2,7 +2,6 @@ package com.alibaba.csp.sentinel.qlearning;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -17,36 +16,70 @@ import com.alibaba.csp.sentinel.slots.block.flow.FlowRuleManager;
 
 public class QLearningDemo {
 
+    static QLearningMetric qLearningMetric = QLearningMetric.getInstance();
 
     private static final String KEY = "abc";
 
     private static AtomicInteger pass = new AtomicInteger();
     private static AtomicInteger block = new AtomicInteger();
     private static AtomicInteger total = new AtomicInteger();
+    private static AtomicInteger activeThread = new AtomicInteger();
 
     private static ArrayList<Double> avgRTArray = new ArrayList<Double>();
     private static ArrayList<Double> qpsArray = new ArrayList<Double>();
 
     private static volatile boolean stop = false;
+    private static final int threadCount = 100;
 
-    private static final int threadCount = 32;
+    private static int seconds = 20 + 20;
+    private static volatile int methodBRunningTime = 2000;
 
-    private static int seconds = 40;
-
-    private static QLearningMetric qLearningMetric = QLearningMetric.getInstance();
-
-    private static boolean isQLearning = true;
+    private static boolean isQLearning = false;
     //set a switch， when it is true it will employ Qlearnig algorithm. If not it will use BBR algorithm.
 
     public static void main(String[] args) throws Exception {
 
+        QLearningMetric qLearningMetric = QLearningMetric.getInstance();
         qLearningMetric.setQLearning(isQLearning);
 
-        initFlowQpsRule();
+        System.out.println(
+                "MethodA will call methodB. After running for a while, methodB becomes fast, "
+                        + "which make methodA also become fast ");
 
         tick();
-        // first make the system run on a very low condition
-        simulateTraffic();
+        initFlowQpsRule();
+
+        for (int i = 0; i < threadCount; i++) {
+            Thread entryThread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    while (true) {
+                        Entry methodA = null;
+                        try {
+                            TimeUnit.MILLISECONDS.sleep(5);
+                            methodA = SphU.entry("methodA");
+                            activeThread.incrementAndGet();
+                            Entry methodB = SphU.entry("methodB");
+                            TimeUnit.MILLISECONDS.sleep(methodBRunningTime);
+                            methodB.exit();
+                            pass.addAndGet(1);
+                        } catch (BlockException e1) {
+                            block.incrementAndGet();
+                        } catch (Exception e2) {
+                            // biz exception
+                        } finally {
+                            total.incrementAndGet();
+                            if (methodA != null) {
+                                methodA.exit();
+                                activeThread.decrementAndGet();
+                            }
+                        }
+                    }
+                }
+            });
+            entryThread.setName("working thread");
+            entryThread.start();
+        }
 
         System.out.println("===== begin to do flow control");
         System.out.println("only 20 requests per second can pass");
@@ -55,30 +88,33 @@ public class QLearningDemo {
 
     private static void initFlowQpsRule() {
         List<FlowRule> rules = new ArrayList<FlowRule>();
-        FlowRule rule1 = new FlowRule();
-        rule1.setResource(KEY);
-        // set limit qps to 20
-        rule1.setCount(1200);
-        rule1.setGrade(RuleConstant.FLOW_GRADE_QPS);
-        rule1.setLimitApp("default");
-        rules.add(rule1);
-        FlowRule rule2 = new FlowRule();
-        rule2.setResource(KEY);
-        // set limit qps to 20
-        rule2.setCount(3000);
-        rule2.setGrade(RuleConstant.FLOW_GRADE_QPS);
-        rule2.setLimitApp("default");
-        rules.add(rule2);
-        qLearningMetric.setRules(rules);
-        FlowRuleManager.loadRules(rules);
-    }
+//
+//        FlowRule rule1 = new FlowRule();
+//        rule1.setResource(KEY);
+//        // set limit qps to 20
+//        rule1.setCount(1200);
+//        rule1.setGrade(RuleConstant.FLOW_GRADE_QPS);
+//        rule1.setLimitApp("default");
+//        rules.add(rule1);
+//        FlowRule rule2 = new FlowRule();
+//        rule2.setResource(KEY);
+//        // set limit qps to 20
+//        rule2.setCount(3000);
+//        rule2.setGrade(RuleConstant.FLOW_GRADE_QPS);
+//        rule2.setLimitApp("default");
+//        rules.add(rule2);
+//        qLearningMetric.setRules(rules);
+//        FlowRuleManager.loadRules(rules);
 
-    private static void simulateTraffic() {
-        for (int i = 0; i < threadCount; i++) {
-            Thread t = new Thread(new RunTask());
-            t.setName("simulate-traffic-Task");
-            t.start();
-        }
+        FlowRule rule3 = new FlowRule();
+        rule3.setResource("methodA");
+        // set limit concurrent thread for 'methodA' to 20
+        rule3.setCount(20);
+        rule3.setGrade(RuleConstant.FLOW_GRADE_THREAD);
+        rule3.setLimitApp("default");
+
+        rules.add(rule3);
+        FlowRuleManager.loadRules(rules);
     }
 
     private static void tick() {
@@ -102,11 +138,6 @@ public class QLearningDemo {
                     TimeUnit.SECONDS.sleep(1);
                 } catch (InterruptedException e) {
                 }
-                double avgRt = Constants.ENTRY_NODE.avgRt();
-                double successQps = Constants.ENTRY_NODE.successQps();
-
-                avgRTArray.add(avgRt);
-                qpsArray.add(successQps);
 
                 long globalTotal = total.get();
                 long oneSecondTotal = globalTotal - oldTotal;
@@ -120,10 +151,20 @@ public class QLearningDemo {
                 long oneSecondBlock = globalBlock - oldBlock;
                 oldBlock = globalBlock;
 
-                System.out.println(seconds + " send qps is: " + oneSecondTotal);
+                double avgRt = Constants.ENTRY_NODE.avgRt();
+                double successQps = Constants.ENTRY_NODE.successQps();
+
+                System.out.println(seconds + " total qps is: " + oneSecondTotal);
                 System.out.print(TimeUtil.currentTimeMillis() + ", total:" + oneSecondTotal
-                        + ", pass:" + oneSecondPass
-                        + ", block:" + oneSecondBlock);
+                        + ", pass:" + successQps
+                        + ", block:" + oneSecondBlock
+                        + " activeThread:" + activeThread.get());
+
+
+                System.out.print(" TEST ----- " + successQps);
+                avgRTArray.add(avgRt);
+                qpsArray.add(successQps);
+
                 if (qLearningMetric.isQLearning() && qLearningMetric.isTrain()) {
                     System.out.println(" ------now is training------ ");
                 } else {
@@ -132,6 +173,10 @@ public class QLearningDemo {
 
                 if (seconds-- <= 0) {
                     stop = true;
+                }
+                if (seconds == 20) {
+                    System.out.println("method B is running much faster; more requests are allowed to pass");
+                    methodBRunningTime = 10;
                 }
             }
 
@@ -159,35 +204,35 @@ public class QLearningDemo {
         System.out.println();
     }
 
-    static class RunTask implements Runnable {
-        @Override
-        public void run() {
-            while (!stop) {
-                Entry entry = null;
-
-                try {
-                    entry = SphU.entry(KEY);
-                    // token acquired, means pass
-                    pass.addAndGet(1);
-                } catch (BlockException e1) {
-                    block.incrementAndGet();
-                } catch (Exception e2) {
-                    // biz exception
-                } finally {
-                    total.incrementAndGet();
-                    if (entry != null) {
-                        entry.exit();
-                    }
-                }
-
-                Random random2 = new Random();
-                try {
-                    TimeUnit.MILLISECONDS.sleep(random2.nextInt(50));
-                } catch (InterruptedException e) {
-                    // ignore
-                }
-            }
-        }
-    }
+//    static class RunTask implements Runnable {
+//        @Override
+//        public void run() {
+//            while (!stop) {
+//                Entry entry = null;
+//
+//                try {
+//                    entry = SphU.entry(KEY);
+//                    // token acquired, means pass
+//                    pass.addAndGet(1);
+//                } catch (BlockException e1) {
+//                    block.incrementAndGet();
+//                } catch (Exception e2) {
+//                    // biz exception
+//                } finally {
+//                    total.incrementAndGet();
+//                    if (entry != null) {
+//                        entry.exit();
+//                    }
+//                }
+//
+//                Random random2 = new Random();
+//                try {
+//                    TimeUnit.MILLISECONDS.sleep(random2.nextInt(50));
+//                } catch (InterruptedException e) {
+//                    // ignore
+//                }
+//            }
+//        }
+//    }
 }
 
