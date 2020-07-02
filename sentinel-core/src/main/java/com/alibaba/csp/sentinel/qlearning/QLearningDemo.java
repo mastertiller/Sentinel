@@ -6,6 +6,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.alibaba.csp.sentinel.Constants;
+import com.alibaba.csp.sentinel.EntryType;
 import com.alibaba.csp.sentinel.util.TimeUtil;
 import com.alibaba.csp.sentinel.Entry;
 import com.alibaba.csp.sentinel.SphU;
@@ -31,10 +32,10 @@ public class QLearningDemo {
     private static volatile boolean stop = false;
     private static final int threadCount = 100;
 
-    private static int seconds = 20 + 20;
-    private static volatile int methodBRunningTime = 2000;
+    private static int seconds = 20 + 60;
+    private static volatile int methodBRunningTime = 1000;
 
-    private static boolean isQLearning = false;
+    private static boolean isQLearning = true;
     //set a switch， when it is true it will employ Qlearnig algorithm. If not it will use BBR algorithm.
 
     public static void main(String[] args) throws Exception {
@@ -47,7 +48,7 @@ public class QLearningDemo {
                         + "which make methodA also become fast ");
 
         tick();
-        initFlowQpsRule();
+        initFlowThreadRule();
 
         for (int i = 0; i < threadCount; i++) {
             Thread entryThread = new Thread(new Runnable() {
@@ -56,8 +57,8 @@ public class QLearningDemo {
                     while (true) {
                         Entry methodA = null;
                         try {
-                            TimeUnit.MILLISECONDS.sleep(5);
-                            methodA = SphU.entry("methodA");
+                            TimeUnit.MILLISECONDS.sleep(10);
+                            methodA = SphU.entry("methodA",EntryType.IN);
                             activeThread.incrementAndGet();
                             Entry methodB = SphU.entry("methodB");
                             TimeUnit.MILLISECONDS.sleep(methodBRunningTime);
@@ -86,7 +87,7 @@ public class QLearningDemo {
 
     }
 
-    private static void initFlowQpsRule() {
+    private static void initFlowThreadRule() {
         List<FlowRule> rules = new ArrayList<FlowRule>();
 //
 //        FlowRule rule1 = new FlowRule();
@@ -156,7 +157,7 @@ public class QLearningDemo {
 
                 System.out.println(seconds + " total qps is: " + oneSecondTotal);
                 System.out.print(TimeUtil.currentTimeMillis() + ", total:" + oneSecondTotal
-                        + ", pass:" + successQps
+                        + ", pass:" + oneSecondPass
                         + ", block:" + oneSecondBlock
                         + " activeThread:" + activeThread.get());
 

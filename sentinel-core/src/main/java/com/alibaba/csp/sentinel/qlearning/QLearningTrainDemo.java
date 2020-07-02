@@ -25,9 +25,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class QLearningTrainDemo {
 
     static QLearningMetric qLearningMetric = QLearningMetric.getInstance();
-
-    private static final String KEY = "abc";
-
+    
     private static AtomicInteger pass = new AtomicInteger();
     private static AtomicInteger block = new AtomicInteger();
     private static AtomicInteger total = new AtomicInteger();
@@ -40,7 +38,7 @@ public class QLearningTrainDemo {
 
     private static int seconds = 40;//整个程序运行时间
 
-    private static boolean isQLearning = true;
+    private static boolean isQLearning = false;
     //set a switch， when it is true it will employ Qlearnig algorithm. If not it will use BBR algorithm.
 
     public static void main(String[] args) throws Exception {
@@ -107,23 +105,23 @@ public class QLearningTrainDemo {
 //        rules.add(rule);
 //        SystemRuleManager.loadRules(Collections.singletonList(rule));
 
-        List<FlowRule> rulesN = new ArrayList<FlowRule>();
-        FlowRule rule1 = new FlowRule();
-        rule1.setResource("methodA");
-        // set limit qps to 20
-        rule1.setCount(3000);
-        rule1.setGrade(RuleConstant.FLOW_GRADE_QPS);
-        rule1.setLimitApp("default");
-        rulesN.add(rule1);
-        FlowRule rule2 = new FlowRule();
-        rule2.setResource("methodA");
-        // set limit qps to 20
-        rule2.setCount(1500);
-        rule2.setGrade(RuleConstant.FLOW_GRADE_QPS);
-        rule2.setLimitApp("default");
-        rulesN.add(rule2);
-        qLearningMetric.setRules(rulesN);
-        FlowRuleManager.loadRules(rulesN);
+//        List<FlowRule> rulesN = new ArrayList<FlowRule>();
+//        FlowRule rule1 = new FlowRule();
+//        rule1.setResource("methodA");
+//        // set limit qps to 20
+//        rule1.setCount(3000);
+//        rule1.setGrade(RuleConstant.FLOW_GRADE_QPS);
+//        rule1.setLimitApp("default");
+//        rulesN.add(rule1);
+//        FlowRule rule2 = new FlowRule();
+//        rule2.setResource("methodA");
+//        // set limit qps to 20
+//        rule2.setCount(1500);
+//        rule2.setGrade(RuleConstant.FLOW_GRADE_QPS);
+//        rule2.setLimitApp("default");
+//        rulesN.add(rule2);
+//        qLearningMetric.setRules(rulesN);
+//        FlowRuleManager.loadRules(rulesN);
     }
 
     private static void tick() {
