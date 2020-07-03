@@ -300,9 +300,9 @@ public final class SystemRuleManager {
             return;
         }
         // Ensure the checking switch is on.
-        if (!checkSystemStatus.get()) {
-            return;
-        }
+//        if (!checkSystemStatus.get()) {
+//            return;
+//        }
 
         // for inbound traffic only
         if (resourceWrapper.getEntryType() != EntryType.IN) {
@@ -335,6 +335,10 @@ public final class SystemRuleManager {
         // cpu usage
         if (highestCpuUsageIsSet && getCurrentCpuUsage() > highestCpuUsage) {
             throw new SystemBlockException(resourceWrapper.getName(), "cpu");
+        }
+
+        if(qLearningMetric.getAction() == 0){
+            throw new SystemBlockException(resourceWrapper.getName(), "q-learning");
         }
     }
 

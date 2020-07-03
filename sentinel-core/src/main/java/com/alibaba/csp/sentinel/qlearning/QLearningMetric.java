@@ -21,7 +21,7 @@ public class QLearningMetric {
     final int stateD = 3;
     final int stateE = 4;
 
-    final int acceptValue = 9;
+    final int acceptValue = 10;
     final int blockValue = acceptValue; //不相等的话无法判断何时更新Q值，需更改updateInterval和qLearningUpdateManager.isUpdate()
 
 
@@ -45,7 +45,21 @@ public class QLearningMetric {
     }
 
     private volatile int actionsCount = actionValues.length;
-    private volatile double[][] Q = new double[statesCount][actionsCount];
+
+    public double[][] getQtable() {
+        return Qtable;
+    }
+
+
+    public void setQtable(double[][] qtable) {
+        Qtable = qtable;
+    }
+
+    private volatile double[][] Qtable = new double[statesCount][actionsCount];
+
+    public void setMaxTrainNum(int maxTrainNum) {
+        this.maxTrainNum = maxTrainNum;
+    }
 
     private volatile int maxTrainNum = 10000;
     private volatile boolean isTrain = true;
@@ -59,8 +73,6 @@ public class QLearningMetric {
     private double gamma = 1;
 
     private double tolerance = 0.01;
-
-
 
     private int rewardValue = 10;
     private int punishValue = -1;
@@ -147,11 +159,11 @@ public class QLearningMetric {
     }
 
     public synchronized void setQValue(int state, int action, double q) {
-        Q[state][action] = q;
+        Qtable[state][action] = q;
     }
 
     public double getQValue(int state, int action) {
-        return this.Q[state][action];
+        return this.Qtable[state][action];
     }
 
 
@@ -164,14 +176,14 @@ public class QLearningMetric {
     }
 
     public synchronized void setQ(int s, int a, double value) {
-        Q[s][a] = value;
+        Qtable[s][a] = value;
     }
 
     public synchronized double getmaxQ(int nextState) {
 
         double maxValue = Double.MIN_VALUE;
         for (int i = 0; i < actionsCount; i++) {
-            double value = this.Q[nextState][i];
+            double value = this.Qtable[nextState][i];
 
             if (value > maxValue) {
                 maxValue = value;
@@ -225,7 +237,7 @@ public class QLearningMetric {
         for (int i = 0; i < statesCount; i++) {
             int from = states[i];
             int to = policy(from);
-            System.out.println("Current State: " + stateNames[from] + "       Action: " + actionNames[to] + "        Q: " + this.Q[from][to]);
+            System.out.println("Current State: " + stateNames[from] + "       Action: " + actionNames[to] + "        Q: " + this.Qtable[from][to]);
         }
     }
 
@@ -237,14 +249,35 @@ public class QLearningMetric {
 
         for (int i = 0; i < actionsCount; i++) {
             int action = i;
-            double value = Q[state][action];
+            double value = Qtable[state][action];
 
             if (value > maxValue) {
                 maxValue = value;
                 policyGotoAction = action;
             }
         }
+        setAction(policyGotoAction);
         return policyGotoAction;
+    }
+
+    public void setAlpha(double alpha) {
+        this.alpha = alpha;
+    }
+
+    public void setBeta(double beta) {
+        this.beta = beta;
+    }
+
+    public void setDelta(double delta) {
+        this.delta = delta;
+    }
+
+    public void setGamma(double gamma) {
+        this.gamma = gamma;
+    }
+
+    public void setTolerance(double tolerance) {
+        this.tolerance = tolerance;
     }
 
     public double getAlpha() {
@@ -358,6 +391,8 @@ public class QLearningMetric {
         return false;
 
     }
+
+
 
 
 }

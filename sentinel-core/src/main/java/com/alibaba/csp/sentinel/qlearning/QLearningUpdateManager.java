@@ -4,9 +4,11 @@ import com.alibaba.csp.sentinel.Constants;
 import com.alibaba.csp.sentinel.slots.block.RuleConstant;
 import com.alibaba.csp.sentinel.slots.block.flow.FlowRule;
 import com.alibaba.csp.sentinel.slots.block.flow.FlowRuleManager;
+import com.alibaba.csp.sentinel.slots.system.SystemRule;
 import com.alibaba.csp.sentinel.slots.system.SystemRuleManager;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -37,19 +39,24 @@ public class QLearningUpdateManager {
 //            System.out.println(" in take action ().");
             int actionValue = chooseAction();
 
-            //通过改变QPS限流规则来更改Accept和Block的数量
-            List<FlowRule> oldRules = qLearningMetric.getRules();
-            List<FlowRule> newRules = new ArrayList<>();
-            for (FlowRule r : oldRules) {
-                newRules.add(r);
-            }
-            FlowRule rule1 = new FlowRule();
-            rule1.setResource(resourceWrapperName);
-            rule1.setCount(Constants.ENTRY_NODE.successQps() + actionValue);
-            rule1.setGrade(RuleConstant.FLOW_GRADE_QPS);
-            rule1.setLimitApp("default"); //注意要与oldRules一致。
-            newRules.add(rule1);
-            FlowRuleManager.loadRules(newRules);
+//            //通过改变QPS限流规则来更改Accept和Block的数量
+//            List<FlowRule> oldRules = qLearningMetric.getRules();
+//            List<FlowRule> newRules = new ArrayList<>();
+//            for (FlowRule r : oldRules) {
+//                newRules.add(r);
+//            }
+//            FlowRule rule1 = new FlowRule();
+//            rule1.setResource(resourceWrapperName);
+//            rule1.setCount(Constants.ENTRY_NODE.maxSuccessQps() + actionValue);
+//            rule1.setGrade(RuleConstant.FLOW_GRADE_QPS);
+//            rule1.setLimitApp("default"); //注意要与oldRules一致。
+//            newRules.add(rule1);
+//            FlowRuleManager.loadRules(newRules);
+//            List<SystemRule> rules = new ArrayList<SystemRule>();
+//            SystemRule rule = new SystemRule();
+//            rule.setQps(Constants.ENTRY_NODE.maxSuccessQps() + actionValue);
+//            rules.add(rule);
+//        SystemRuleManager.loadRules(Collections.singletonList(rule));
 //            if (!chooseAction(currentState)) {
 ////                //throw new SystemBlockException(resourceWrapper.getName(), "q-learning");
 //
