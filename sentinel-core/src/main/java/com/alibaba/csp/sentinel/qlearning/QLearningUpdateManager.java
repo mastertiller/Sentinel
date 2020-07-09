@@ -27,7 +27,7 @@ public class QLearningUpdateManager {
 
 
 
-    public synchronized void takeAction(String resourceWrapperName){
+    public synchronized void takeAction(String resourceWrapperName, double totalQps, double avgRt, int curThreadNum){
 //        if(qLearningMetric.isQLearning()){
 //            System.out.println(" in take action ().");
 //        }
@@ -37,7 +37,7 @@ public class QLearningUpdateManager {
         if (qLearningMetric.isQLearning() && qLearningMetric.ifTakeAction()) {
             qLearningMetric.addTrainNum();
 //            System.out.println(" in take action ().");
-            int actionValue = chooseAction();
+            int actionValue = chooseAction(totalQps,avgRt,curThreadNum);
 
 //            //通过改变QPS限流规则来更改Accept和Block的数量
 //            List<FlowRule> oldRules = qLearningMetric.getRules();
@@ -70,7 +70,8 @@ public class QLearningUpdateManager {
      *如果Qlearning正在训练，则随机选择动作，如果action = 0 执行block 如果 action= 1.执行accept
      *
      */
-    public synchronized int chooseAction() {
+    public synchronized int chooseAction(double totalQps, double avgRt, int curThreadNum) {
+        currentState = qLearningMetric.locateState(SystemRuleManager.getCurrentCpuUsage(),SystemRuleManager.getCurrentSystemAvgLoad(),totalQps,avgRt,curThreadNum);
         if (qLearningMetric.isTrain()) {
             //如果Qlearning正在训练，则随机选择动作，如果action = 0 执行block 如果 action= 1.执行accept
 
@@ -79,8 +80,8 @@ public class QLearningUpdateManager {
             return randActionValue;
         } else {
             //会从已经训练出来的policy当中选出 最大奖励期望值的action
-            currentState = qLearningMetric.locateState(SystemRuleManager.getCurrentCpuUsage());
             int bestActionValue = qLearningMetric.policy(currentState);
+
             return bestActionValue;
 
         }
@@ -91,11 +92,11 @@ public class QLearningUpdateManager {
     /**
      * 执行完Action并发挥效用后，计算奖励并更新Q值
      */
-    public synchronized void qLearningUpdate(double successQPS, double avgRt) {
+    public synchronized void qLearningUpdate(double successQPS, double avgRt, double totalQps, int curThreadNum) {
         if (qLearningMetric.isQLearning() && qLearningMetric.isTrain() && qLearningMetric.isUpdate()) {
             // 记录当前的增量。
             recordUtilityIncrease(successQPS, avgRt);
-            qLearningMetric.updateQ();
+            qLearningMetric.updateQ(avgRt, totalQps, curThreadNum);
 //            } else {
 //                qLearningMetric.setTrain(false);
 //                //System.out.println("-------------------TRAINING END--------------------");

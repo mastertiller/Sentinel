@@ -3,9 +3,7 @@ package com.alibaba.csp.sentinel.qlearning;
 import com.alibaba.csp.sentinel.slots.block.flow.FlowRule;
 import com.alibaba.csp.sentinel.slots.system.SystemRuleManager;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 /**
  * 该类为单例模式，保证了全局变量只能够访问一个公有对象 通过内部类来实现
@@ -15,30 +13,59 @@ public class QLearningMetric {
 
     private boolean isQLearning;
 
-    final int stateA = 0;
-    final int stateB = 1;
-    final int stateC = 2;
-    final int stateD = 3;
-    final int stateE = 4;
-
     final int acceptValue = 10;
     final int blockValue = acceptValue; //不相等的话无法判断何时更新Q值，需更改updateInterval和qLearningUpdateManager.isUpdate()
 
+//    public void setStateNum(int stateNum) {//设置状态
+//        this.stateNum = stateNum;
+//        for (int i = 0; i <= stateNum; i++){
+//            this.states[i] = i;
+//        }
+//    }
+//    private int stateNum;
 
-    final int[] states = new int[]{stateA, stateB, stateC, stateD, stateE};
-    final int[] actionValues = new int[]{0,acceptValue};
+//    private Set<Integer> cpuStates = new HashSet<Integer>();
+//    private Set<Integer> loadStates = new HashSet<Integer>();
+//    private Set<Integer> qpsStates = new HashSet<Integer>();
+//    private Set<Integer> rtStates = new HashSet<Integer>();
+//    private Set<Integer> threadStates = new HashSet<Integer>();
+
+    //    final int[] states = new int[]{stateA, stateB, stateC, stateD, stateE};
+//    private volatile ArrayList<Integer> states = new ArrayList<Integer>();
+
+    final int[] actionValues = new int[]{0, acceptValue};
 
     String[] stateNames = new String[]{"CPU Usage: UnGet", "CPU Usage: (0%, 25%)", "CPU Usage: (25%, 50%)", "CPU Usage: (50%, 75%)", "CPU Usage: (75%, 100%)"};
-    String[] actionNames = new String[]{"Unchange","Accept", "Block"};
+    String[] actionNames = new String[]{"Unchange", "Accept", "Block"};
 
     private volatile double utilityIncrease;
-    private volatile int state;
+
+    public HashMap<String, Integer> getStatesMap() {
+        return statesMap;
+    }
+
+    public void setStatesMap(HashMap<String, Integer> statesMap) {
+        this.statesMap = statesMap;
+    }
+
+    //    private volatile int[] state = new int[5];
+    private volatile HashMap<String,Integer> statesMap = new HashMap<>();
+
+    public int getStateIndex() {
+        return stateIndex;
+    }
+
+    public void setStateIndex(int stateIndex) {
+        this.stateIndex = stateIndex;
+    }
+
+    private volatile int stateIndex;
     private volatile int action;
 
-    private volatile int statesCount = states.length;
+    private volatile int statesCount = statesMap.size();
 
 
-    public synchronized int randomActionValue(){
+    public synchronized int randomActionValue() {
         int randValue = new Random().nextInt(actionsCount);
         setAction(randValue); //记录执行的动作
         return actionValues[randValue];
@@ -46,16 +73,18 @@ public class QLearningMetric {
 
     private volatile int actionsCount = actionValues.length;
 
-    public double[][] getQtable() {
+
+//    public void setQtable(ArrayList<double[]> qtable) {
+//        Qtable = qtable;
+//    }
+
+    public ArrayList<double[]> getQtable() {
         return Qtable;
     }
 
-
-    public void setQtable(double[][] qtable) {
-        Qtable = qtable;
-    }
-
-    private volatile double[][] Qtable = new double[statesCount][actionsCount];
+    //    private volatile double[][] Qtable = new double[statesCount][actionsCount];
+   private volatile ArrayList<double[]> Qtable = new ArrayList<double[]>();
+//    private Set<Integer> cpuStates = new HashSet<Integer>();
 
     public void setMaxTrainNum(int maxTrainNum) {
         this.maxTrainNum = maxTrainNum;
@@ -107,16 +136,15 @@ public class QLearningMetric {
         this.actionIntervalCount = actionIntervalCount;
     }
 
-    public void addActionIntervalCount(){
+    public void addActionIntervalCount() {
         this.actionIntervalCount = this.actionIntervalCount + 1;
     }
 
-    public synchronized boolean ifTakeAction(){
+    public synchronized boolean ifTakeAction() {
         addActionIntervalCount();
-        if(this.actionIntervalCount < this.actionInterval){
+        if (this.actionIntervalCount < this.actionInterval) {
             return false;
-        }
-        else if(this.actionIntervalCount == this.actionInterval){
+        } else if (this.actionIntervalCount == this.actionInterval) {
             this.actionIntervalCount = 0;
             return true;
         }
@@ -150,20 +178,13 @@ public class QLearningMetric {
         return utilityIncrease;
     }
 
-    public synchronized void setState(int state) {
-        this.state = state;
-    }
-
-    public int getState() {
-        return this.state;
-    }
 
     public synchronized void setQValue(int state, int action, double q) {
-        Qtable[state][action] = q;
+        Qtable.get(state)[action] = q;
     }
 
     public double getQValue(int state, int action) {
-        return this.Qtable[state][action];
+        return this.Qtable.get(state)[action];
     }
 
 
@@ -176,14 +197,15 @@ public class QLearningMetric {
     }
 
     public synchronized void setQ(int s, int a, double value) {
-        Qtable[s][a] = value;
+//        if(Qtable.size() <= s) Qtable.add(new double[actionsCount]);
+        Qtable.get(s)[a] = value;
     }
 
     public synchronized double getmaxQ(int nextState) {
 
         double maxValue = Double.MIN_VALUE;
         for (int i = 0; i < actionsCount; i++) {
-            double value = this.Qtable[nextState][i];
+            double value = this.Qtable.get(nextState)[i];
 
             if (value > maxValue) {
                 maxValue = value;
@@ -205,10 +227,9 @@ public class QLearningMetric {
     }
 
     public synchronized boolean isTrain() {
-        if(this.trainNum <= this.maxTrainNum){
+        if (this.trainNum <= this.maxTrainNum) {
             this.isTrain = true;
-        }
-        else{
+        } else {
             this.isTrain = false;
         }
         return isTrain;
@@ -226,18 +247,21 @@ public class QLearningMetric {
         this.updateIntervalCount = updateIntervalCount;
     }
 
-    public synchronized void addUpdateIntervalCount(){
+    public synchronized void addUpdateIntervalCount() {
 //        System.out.print(updateIntervalCount + " ------------------- ");
         this.updateIntervalCount = updateIntervalCount + 1;
 //        System.out.println(updateIntervalCount);
     }
 
     public void showPolicy() {
+        int from;
+        int to;
         System.out.println("\n ======= Show Policy =======");
+
         for (int i = 0; i < statesCount; i++) {
-            int from = states[i];
-            int to = policy(from);
-            System.out.println("Current State: " + stateNames[from] + "       Action: " + actionNames[to] + "        Q: " + this.Qtable[from][to]);
+            from = i;
+            to = policy(from);
+            System.out.println("Current State: " + from + "       Action: " + actionNames[to] + "        Q: " + this.Qtable.get(from)[to]);
         }
     }
 
@@ -249,7 +273,7 @@ public class QLearningMetric {
 
         for (int i = 0; i < actionsCount; i++) {
             int action = i;
-            double value = Qtable[state][action];
+            double value = Qtable.get(state)[action];  //改成选取arraylist里面的值。
 
             if (value > maxValue) {
                 maxValue = value;
@@ -312,68 +336,108 @@ public class QLearningMetric {
         return QLearningMetricContainer.instance;
     }
 
-    public synchronized void updateQ() {
+    public synchronized void updateQ(double avgRt, double totalQps, int curThreadNum) {
 
-        double q = getQValue(state, action);
+        double q = getQValue(stateIndex, action);
         //执行action之后的下一个state属于哪个state。
         //locateNextState();
 
         double cpuUsage = SystemRuleManager.getCurrentCpuUsage();
-        int nextState = locateState(cpuUsage);
+        double load = SystemRuleManager.getCurrentSystemAvgLoad();
+        int nextState = locateState(cpuUsage,load,avgRt, totalQps, curThreadNum);
 
         double maxQ = getmaxQ(nextState);
 
         double qValue = q + delta * (rewardValue + gamma * maxQ - q);//delta决定了奖励和下一状态的期望值的影响程度 gamma决定了maxQ的影响程度
 
-        setQ(state, action, qValue);
+        setQ(stateIndex, action, qValue);
     }
 
     /**
-     *通过Cpu使用率来判断当前所处的状态，返回值为qlearning算法里的当前状态
+     * 通过Cpu使用率来判断当前所处的状态，返回值为qlearning算法里的当前状态
      * Judging current state by cpu usage，it is current state which is in the Qlearning algorithm。
      *
      * @return
      */
-    public synchronized int locateState(double currentCpuUsage) {
+    public synchronized int locateState(double currentCpuUsage,double currentLoad, double totalQps, double Rt, int curThreadNum) {
 
-        if (0 <= currentCpuUsage && currentCpuUsage < 0.25) {
-            setState(1);
-            return getState();
-        }
-        if (0.25 <= currentCpuUsage && currentCpuUsage < 0.5) {
-            setState(2);
-            return getState();
-        }
-        if (0.5 <= currentCpuUsage && currentCpuUsage < 0.75) {
-            setState(3);
-            return getState();
-        }
-        if (0.75 <= currentCpuUsage && currentCpuUsage <= 1) {
-            setState(4);
-            return getState();
-        }
+        int stateC = new Double(currentCpuUsage / 0.1).intValue();
+        int stateL = new Double(currentLoad / 0.1).intValue();
+        int stateQ = new Double(totalQps / 100).intValue();
+        int stateR = new Double(Rt / 1).intValue();
+        int stateT = new Double(curThreadNum / 50).intValue();
 
-        setState(0);
-        return getState();
+        int stateIndex;
+
+        String currentState = stateC + "#" + stateL + "#" + stateQ + "#" + stateR + "#" + stateT;
+        if (!statesMap.containsKey(currentState)){
+//                String.valueOf(stateC) + "#" + String.valueOf(stateL) + "#" + String.valueOf(stateQ) + "#" + String.valueOf(stateR) + "#" + String.valueOf(stateT))){
+//            setStateC(stateC);
+//            setStateL(stateL);
+//            setStateQ(stateQ);
+//            setStateR(stateR);
+//            setStateT(stateT);
+            stateIndex = statesMap.size();
+            statesMap.put(currentState, stateIndex);
+            Qtable.add(new double[actionsCount]);
+        }
+        else{
+            stateIndex = statesMap.get(currentState);
+        }
+        setStateIndex(stateIndex);
+        return getStateIndex();
+
+//        double currentload = 1;//后面删掉它 重新构建currentload
+//        double interval = 1 / getStateSum();
+//        double stateNum = currentCpuUsage / interval;
+//        int i = new Double(stateNum).intValue();//double 转int的问题
+//        int j = new Double(currentload / interval).intValue();
+//
+//        if (i < 0 | j < 0) {
+//            setState(0);
+//        } else {
+//            setState(i * 10 + j + 1);
+//        }
+//        return getState();
+
+//        if (0 <= currentCpuUsage && currentCpuUsage < 0.25) {
+//            setState(1);
+//            return getState();
+//        }
+//        if (0.25 <= currentCpuUsage && currentCpuUsage < 0.5) {
+//            setState(2);
+//            return getState();
+//        }
+//        if (0.5 <= currentCpuUsage && currentCpuUsage < 0.75) {
+//            setState(3);
+//            return getState();
+//        }
+//        if (0.75 <= currentCpuUsage && currentCpuUsage <= 1) {
+//            setState(4);
+//            return getState();
+//        }
+//
+//        setState(0);
+//        return getState();
     }
 
     public synchronized int getReward() {
         if (getUtilityIncrease() > tolerance) {
             return rewardValue;
-        } else if(getUtilityIncrease() < -1*tolerance){
+        } else if (getUtilityIncrease() < -1 * tolerance) {
             return punishValue;
         } else {
             return 0;
         }
     }
 
-    public double calculateUtility(double successQPS, double avgRt){
+    public double calculateUtility(double successQPS, double avgRt) {
         double utility = alpha * successQPS - beta * avgRt;
         return utility;
     }
 
-    public synchronized boolean isUpdate(){
-        if(getTrainNum() > 0 && getActionIntervalCount() == updateInterval) {
+    public synchronized boolean isUpdate() {
+        if (getTrainNum() > 0 && getActionIntervalCount() == updateInterval) {
 //            addUpdateIntervalCount();
 //            System.out.print(updateIntervalCount);
 //            if (getUpdateIntervalCount() < getUpdateInterval()) {
@@ -391,8 +455,6 @@ public class QLearningMetric {
         return false;
 
     }
-
-
 
 
 }
