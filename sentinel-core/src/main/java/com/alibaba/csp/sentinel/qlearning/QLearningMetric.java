@@ -7,15 +7,15 @@ public class QLearningMetric {
 
 
     private boolean isQLearning;
+    private  volatile int StateSum;//状态总数
+//    final int stateA = 0;
+//    final int stateB = 1;
+//    final int stateC = 2;
+//    final int stateD = 3;
+//    final int stateE = 4;
 
-    final int stateA = 0;
-    final int stateB = 1;
-    final int stateC = 2;
-    final int stateD = 3;
-    final int stateE = 4;
-
-    final int[] states = new int[]{stateA, stateB, stateC, stateD, stateE};
-
+//    final int[] states = new int[]{stateA, stateB, stateC, stateD, stateE};
+    final int [] states = new int[StateSum];
     String[] stateNames = new String[]{"CPU Usage: UnGet", "CPU Usage: (0%, 25%)", "CPU Usage: (25%, 50%)", "CPU Usage: (50%, 75%)", "CPU Usage: (75%, 100%)"};
     String[] actionNames = new String[]{"Block", "Accept"};
 
@@ -41,6 +41,16 @@ public class QLearningMetric {
     private int rewardValue = 10;
     private int punishValue = -1;
 
+    public void setStateSum (int StateSum) {//设置状态
+        this.StateSum = StateSum;
+        for (int i = 0; i <= StateSum; i++){
+            this.states[i] = i;
+        }
+    }
+
+    public int getStateSum () {
+        return StateSum;
+    }
 
     private QLearningMetric() {
 

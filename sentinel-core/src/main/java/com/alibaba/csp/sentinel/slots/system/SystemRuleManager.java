@@ -356,26 +356,37 @@ public final class SystemRuleManager {
      * @return
      */
     public static synchronized int locateState(double currentCpuUsage) {
+        double currentload = 1;//后面删掉它 重新构建currentload
+        double interval = 1 / qLearningMetric.getStateSum();
+        double stateNum = currentCpuUsage / interval;
+        int i = new Double(stateNum).intValue();//double 转int的问题
+        int j = new Double(currentload/interval).intValue();
 
-        if (0 <= currentCpuUsage && currentCpuUsage < 0.25) {
-            qLearningMetric.setState(1);
-            return qLearningMetric.getState();
-        }
-        if (0.25 <= currentCpuUsage && currentCpuUsage < 0.5) {
-            qLearningMetric.setState(2);
-            return qLearningMetric.getState();
-        }
-        if (0.5 <= currentCpuUsage && currentCpuUsage < 0.75) {
-            qLearningMetric.setState(3);
-            return qLearningMetric.getState();
-        }
-        if (0.75 <= currentCpuUsage && currentCpuUsage <= 1) {
-            qLearningMetric.setState(4);
-            return qLearningMetric.getState();
-        }
 
-        qLearningMetric.setState(0);
+        if (i < 0){
+            qLearningMetric.setState(0);
+        }else qLearningMetric.setState(i*10+j+1);
         return qLearningMetric.getState();
+//        if (0 <= currentCpuUsage && currentCpuUsage < 0.25) {
+//            qLearningMetric.setState(1);
+//            return qLearningMetric.getState();
+//        }
+//        if (0.25 <= currentCpuUsage && currentCpuUsage < 0.5) {
+//            qLearningMetric.setState(2);
+//            return qLearningMetric.getState();
+//        }
+//        if (0.5 <= currentCpuUsage && currentCpuUsage < 0.75) {
+//            qLearningMetric.setState(3);
+//            return qLearningMetric.getState();
+//        }
+//        if (0.75 <= currentCpuUsage && currentCpuUsage <= 1) {
+//            qLearningMetric.setState(4);
+//            return qLearningMetric.getState();
+//        }
+//
+//        qLearningMetric.setState(0);
+//        return qLearningMetric.getState();
+
     }
 
 
