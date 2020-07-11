@@ -51,7 +51,7 @@ public class FlowQpsDemo {
 
         tick();
         // first make the system run on a very low condition
-        simulateTraffic();
+        simulateTraffic();//测试通行
 
         System.out.println("===== begin to do flow control");
         System.out.println("only 20 requests per second can pass");
@@ -95,10 +95,10 @@ public class FlowQpsDemo {
             long oldPass = 0;
             long oldBlock = 0;
             while (!stop) {
-                try {
-                    TimeUnit.SECONDS.sleep(1);
-                } catch (InterruptedException e) {
-                }
+                    try {
+                        TimeUnit.SECONDS.sleep(1);
+                    } catch (InterruptedException e) {
+                    }
                 long globalTotal = total.get();
                 long oneSecondTotal = globalTotal - oldTotal;
                 oldTotal = globalTotal;
@@ -138,7 +138,7 @@ public class FlowQpsDemo {
                 try {
                     entry = SphU.entry(KEY);
                     // token acquired, means pass
-                    pass.addAndGet(1);
+                    pass.addAndGet(1);//这个和底下的increment有什么区别
                 } catch (BlockException e1) {
                     block.incrementAndGet();
                 } catch (Exception e2) {
@@ -151,8 +151,9 @@ public class FlowQpsDemo {
                 }
 
                 Random random2 = new Random();
+
                 try {
-                    TimeUnit.MILLISECONDS.sleep(random2.nextInt(50));
+                    TimeUnit.MILLISECONDS.sleep(random2.nextInt(50));//为什么还需要第二个延时等待
                 } catch (InterruptedException e) {
                     // ignore
                 }

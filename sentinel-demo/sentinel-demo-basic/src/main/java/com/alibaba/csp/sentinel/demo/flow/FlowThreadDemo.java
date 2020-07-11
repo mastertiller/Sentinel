@@ -103,7 +103,7 @@ public class FlowThreadDemo {
         timer.start();
     }
 
-    static class TimerTask implements Runnable {
+    static class TimerTask implements Runnable {//这个的timertask相对复杂一些 需要深入理解一些
 
         @Override
         public void run() {

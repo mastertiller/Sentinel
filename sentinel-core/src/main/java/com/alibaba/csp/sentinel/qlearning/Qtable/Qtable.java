@@ -1,13 +1,18 @@
 package com.alibaba.csp.sentinel.qlearning.Qtable;
 
+import com.sun.org.apache.xerces.internal.xs.StringList;
+import javafx.scene.control.Labeled;
+
 import java.io.*;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 public class Qtable {
     public static void main (String[] args) throws IOException {
 
         while(true) {
             double[][] qtable = {{5, 4, 3}, {7, 8, 9}, {6.5, 2}, {4, 8}};
-            save(qtable);
+//            save(qtable);
             readFile();
         }
 
@@ -31,21 +36,54 @@ public class Qtable {
         }
     }
 
-    public static void readFile() {
-        String pathname = "QtableData/test.txt"; // 绝对路径或相对路径都可以，写入文件时演示相对路径,读取以上路径的input.txt文件
-        //防止文件建立或读取失败，用catch捕捉错误并打印，也可以throw;
-        try (FileReader reader = new FileReader(pathname);
-             BufferedReader br = new BufferedReader(reader) // 建立一个对象，它把文件内容转成计算机能读懂的语言
-        ) {
-            String line;
-            //网友推荐更加简洁的写法
-            while ((line = br.readLine()) != null) {
-                // 一次读入一行数据
-                System.out.println(line);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+     public static void readFile() throws IOException {
+//        String pathname = "QtableData/test.txt"; // 绝对路径或相对路径都可以，写入文件时演示相对路径,读取以上路径的input.txt文件
+//        //防止文件建立或读取失败，用catch捕捉错误并打印，也可以throw;
+//        double d [][];
+//        try (FileReader reader = new FileReader(pathname);
+//             BufferedReader br = new BufferedReader(reader) // 建立一个对象，它把文件内容转成计算机能读懂的语言
+//        ) {
+//            String line;
+//            //网友推荐更加简洁的写法
+//            line = br.readLine();
+//            String[] First = line.split(" ");
+//            d = new double[First.length][];
+//
+//            while ((line = br.readLine()) != null) {
+//                // 一次读入一行数据
+//
+//
+//                System.out.println(line);
+//            }
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+         //创建集合对象
+         ArrayList<String> array = new ArrayList<>();
+         ArrayList<double[]> Qtable = new ArrayList<>();
+
+         //创建输入缓冲流对象
+         BufferedReader br = new BufferedReader(new FileReader("QtableData/test.txt"));
+         String line;
+         while((line = br.readLine()) != null) {
+             array.add(line);
+
+
+         }
+
+         //释放资源
+         br.close();
+
+         for(int x=0;x<array.size();x++) {
+             System.out.println(array.get(x));
+         }
+
+
+
+
+
+     }
+
     }
 
-}
+

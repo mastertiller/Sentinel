@@ -31,6 +31,8 @@ import com.alibaba.csp.sentinel.slots.system.SystemRuleManager;
 
 /**
  * @author jialiang.linjl
+ *
+ * 去创建线程 模拟请求
  */
 public class SystemGuardDemo {
 
@@ -55,17 +57,17 @@ public class SystemGuardDemo {
                     while (true) {
                         Entry entry = null;
                         try {
-                            entry = SphU.entry("methodA", EntryType.IN);
-                            pass.incrementAndGet();
+                            entry = SphU.entry("methodA", EntryType.IN);//Google 线程的tutorial 这是一个入口资源
+                            pass.incrementAndGet();//试图让线程进入这个资源
                             try {
                                 TimeUnit.MILLISECONDS.sleep(20);
                             } catch (InterruptedException e) {
                                 // ignore
                             }
                         } catch (BlockException e1) {
-                            block.incrementAndGet();
+                            block.incrementAndGet();//自增1
                             try {
-                                TimeUnit.MILLISECONDS.sleep(20);
+                                TimeUnit.MILLISECONDS.sleep(20);//试着改成 其他数字去尝试情况
                             } catch (InterruptedException e) {
                                 // ignore
                             }
