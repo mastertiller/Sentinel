@@ -28,16 +28,13 @@ public class QLearningUpdateManager {
 
 
     public synchronized void takeAction(String resourceWrapperName, double totalQps, double avgRt, int curThreadNum){
-//        if(qLearningMetric.isQLearning()){
-//            System.out.println(" in take action ().");
-//        }
-        //Using Qlearning or BBR?
 
         // 不用判断isTrain().仅当QLearning为true，且actionIntervalCount为10的倍数时，返回true。
         if (qLearningMetric.isQLearning() && qLearningMetric.ifTakeAction()) {
             qLearningMetric.addTrainNum();
 //            System.out.println(" in take action ().");
             int actionValue = chooseAction(totalQps,avgRt,curThreadNum);
+            setCurrentUtility(Constants.ENTRY_NODE.successQps(),Constants.ENTRY_NODE.avgRt());
 
 //            //通过改变QPS限流规则来更改Accept和Block的数量
 //            List<FlowRule> oldRules = qLearningMetric.getRules();
@@ -75,8 +72,9 @@ public class QLearningUpdateManager {
         if (qLearningMetric.isTrain()) {
             //如果Qlearning正在训练，则随机选择动作，如果action = 0 执行block 如果 action= 1.执行accept
 
-//        System.out.println("**************************" + randAction);
+
             randActionValue = qLearningMetric.randomActionValue();
+            System.out.println(" ** " + randActionValue + " ** " + qLearningMetric.getActionIntervalCount() + " ** ");
             return randActionValue;
         } else {
             //会从已经训练出来的policy当中选出 最大奖励期望值的action
@@ -109,13 +107,14 @@ public class QLearningUpdateManager {
     private synchronized void recordUtilityIncrease(double successQPS, double avgRt) {
         nextUtility = qLearningMetric.calculateUtility(successQPS, avgRt);
         qLearningMetric.setNextUtility(nextUtility);
-
+        System.out.println("nextUtility = " + nextUtility);
         qLearningMetric.recordUtilityIncrease();
     }
 
-    public void setCurrentUtility(double successQPS,double avgRt){
+    public synchronized void setCurrentUtility(double successQPS,double avgRt){
         currentUtility = qLearningMetric.calculateUtility(successQPS,avgRt);
         qLearningMetric.setCurrentUtility(currentUtility);
+        System.out.println("currentUtility = " + currentUtility);
     }
 
 

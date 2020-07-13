@@ -337,7 +337,9 @@ public final class SystemRuleManager {
             throw new SystemBlockException(resourceWrapper.getName(), "cpu");
         }
 
+        // 注意：要改，因为action初始化为0，必然block前10个请求。
         if(qLearningMetric.getAction() == 0){
+//            System.out.println("- block - " + qLearningMetric.getActionIntervalCount());
             throw new SystemBlockException(resourceWrapper.getName(), "q-learning");
         }
     }

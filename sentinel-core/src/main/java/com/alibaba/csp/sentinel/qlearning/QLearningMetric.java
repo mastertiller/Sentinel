@@ -55,14 +55,14 @@ public class QLearningMetric {
         return stateIndex;
     }
 
-    public void setStateIndex(int stateIndex) {
+    public synchronized void setStateIndex(int stateIndex) {
         this.stateIndex = stateIndex;
     }
 
     private volatile int stateIndex;
     private volatile int action;
 
-    private volatile int statesCount = statesMap.size();
+    private volatile int statesCount;
 
 
     public synchronized int randomActionValue() {
@@ -96,12 +96,12 @@ public class QLearningMetric {
     private volatile int trainNum = 0; //当前训练到第几次
 
     private double alpha = 1;//alpha控制了效用方程的qps的参数
-    private double beta = 0.02;//控制了效用方程的RT的参数
+    private double beta = 0.2;//控制了效用方程的RT的参数
 
     private double delta = 1;
     private double gamma = 1;
 
-    private double tolerance = 0.01;
+    private double tolerance = 0.0001;
 
     private int rewardValue = 10;
     private int punishValue = -1;
@@ -136,7 +136,7 @@ public class QLearningMetric {
         this.actionIntervalCount = actionIntervalCount;
     }
 
-    public void addActionIntervalCount() {
+    public synchronized void addActionIntervalCount() {
         this.actionIntervalCount = this.actionIntervalCount + 1;
     }
 
@@ -152,7 +152,7 @@ public class QLearningMetric {
         return false;
     }
 
-    private int actionIntervalCount = 0;
+    private volatile int actionIntervalCount = 0;
 
     public synchronized void setCurrentUtility(double currentUtility) {
         this.currentUtility = currentUtility;
@@ -162,8 +162,8 @@ public class QLearningMetric {
         this.nextUtility = nextUtility;
     }
 
-    private double currentUtility;
-    private double nextUtility;
+    private volatile double currentUtility;
+    private volatile double nextUtility;
 
 
     private QLearningMetric() {
@@ -201,17 +201,31 @@ public class QLearningMetric {
         Qtable.get(s)[a] = value;
     }
 
-    public synchronized double getmaxQ(int nextState) {
+    public synchronized double getmaxQ(double currentCpuUsage,double currentLoad, double totalQps, double Rt, int curThreadNum) {
 
-        double maxValue = Double.MIN_VALUE;
-        for (int i = 0; i < actionsCount; i++) {
-            double value = this.Qtable.get(nextState)[i];
+        int stateC = new Double(currentCpuUsage / 0.1).intValue();
+        int stateL = new Double(currentLoad / 0.1).intValue();
+        int stateQ = new Double(totalQps / 100).intValue();
+        int stateR = new Double(Rt / 1).intValue();
+        int stateT = new Double(curThreadNum / 50).intValue();
 
-            if (value > maxValue) {
-                maxValue = value;
-            }
+        String nextState = stateC + "#" + stateL + "#" + stateQ + "#" + stateR + "#" + stateT;
+        if (!statesMap.containsKey(nextState)){
+            return 0;
         }
-        return maxValue;
+        else {
+            int nextStateIndex = statesMap.get(nextState);
+
+            double maxValue = Double.MIN_VALUE;
+            for (int i = 0; i < actionsCount; i++) {
+                double value = this.Qtable.get(nextStateIndex)[i];
+
+                if (value > maxValue) {
+                    maxValue = value;
+                }
+            }
+            return maxValue;
+        }
     }
 
     public int getTrainNum() {
@@ -256,7 +270,8 @@ public class QLearningMetric {
     public void showPolicy() {
         int from;
         int to;
-        System.out.println("\n ======= Show Policy =======");
+        statesCount = statesMap.size();
+        System.out.println("\n ======= Show Policy =======" + statesCount);
 
         for (int i = 0; i < statesCount; i++) {
             from = i;
@@ -344,11 +359,15 @@ public class QLearningMetric {
 
         double cpuUsage = SystemRuleManager.getCurrentCpuUsage();
         double load = SystemRuleManager.getCurrentSystemAvgLoad();
-        int nextState = locateState(cpuUsage,load,avgRt, totalQps, curThreadNum);
+//        int nextState = locateState();
 
-        double maxQ = getmaxQ(nextState);
+        double maxQ = getmaxQ(cpuUsage,load,avgRt, totalQps, curThreadNum);
 
-        double qValue = q + delta * (rewardValue + gamma * maxQ - q);//delta决定了奖励和下一状态的期望值的影响程度 gamma决定了maxQ的影响程度
+//        System.out.println(" getreward() " + getReward());
+
+        double qValue = q + delta * (getReward() + gamma * maxQ - q);//delta决定了奖励和下一状态的期望值的影响程度 gamma决定了maxQ的影响程度
+
+//        System.out.println(" stateIndex = " + stateIndex + " original q value = " + q + " update q value = " + qValue );
 
         setQ(stateIndex, action, qValue);
     }
@@ -385,7 +404,7 @@ public class QLearningMetric {
             stateIndex = statesMap.get(currentState);
         }
         setStateIndex(stateIndex);
-        return getStateIndex();
+        return stateIndex;
 
 //        double currentload = 1;//后面删掉它 重新构建currentload
 //        double interval = 1 / getStateSum();
@@ -431,7 +450,7 @@ public class QLearningMetric {
         }
     }
 
-    public double calculateUtility(double successQPS, double avgRt) {
+    public synchronized double calculateUtility(double successQPS, double avgRt) {
         double utility = alpha * successQPS - beta * avgRt;
         return utility;
     }

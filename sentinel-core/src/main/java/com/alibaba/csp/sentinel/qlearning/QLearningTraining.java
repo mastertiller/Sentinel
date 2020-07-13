@@ -150,10 +150,9 @@ public class QLearningTraining {
     }
 
     public static void saveQtable(){
-        double[][] qTable = qLearningMetric.getQtable();
+        ArrayList<double[]> qTable = qLearningMetric.getQtable();
         //存入新的
     }
-
 
 
 }
