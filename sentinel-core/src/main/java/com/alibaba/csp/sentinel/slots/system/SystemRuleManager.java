@@ -70,9 +70,6 @@ import com.alibaba.csp.sentinel.slots.block.flow.FlowRuleManager;
  */
 public final class SystemRuleManager {
 
-    private static volatile int currentState;
-    static QLearningMetric qLearningMetric = QLearningMetric.getInstance();
-
     private static volatile double highestSystemLoad = Double.MAX_VALUE;
     /**
      * cpu usage, between [0, 1]
@@ -337,11 +334,6 @@ public final class SystemRuleManager {
             throw new SystemBlockException(resourceWrapper.getName(), "cpu");
         }
 
-        // 注意：要改，因为action初始化为0，必然block前10个请求。
-        if(qLearningMetric.getAction() == 0){
-//            System.out.println("- block - " + qLearningMetric.getActionIntervalCount());
-            throw new SystemBlockException(resourceWrapper.getName(), "q-learning");
-        }
     }
 
     private static boolean checkBbr(int currentThread) {

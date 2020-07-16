@@ -74,7 +74,7 @@ public class QLearningUpdateManager {
 
 
             randActionValue = qLearningMetric.randomActionValue();
-            System.out.println(" ** " + randActionValue + " ** " + qLearningMetric.getActionIntervalCount() + " ** ");
+//            System.out.println(" ** " + randActionValue + " ** " + qLearningMetric.getActionIntervalCount() + " ** ");
             return randActionValue;
         } else {
             //会从已经训练出来的policy当中选出 最大奖励期望值的action
@@ -107,14 +107,14 @@ public class QLearningUpdateManager {
     private synchronized void recordUtilityIncrease(double successQPS, double avgRt) {
         nextUtility = qLearningMetric.calculateUtility(successQPS, avgRt);
         qLearningMetric.setNextUtility(nextUtility);
-        System.out.println("nextUtility = " + nextUtility);
+//        System.out.println("nextUtility = " + nextUtility);
         qLearningMetric.recordUtilityIncrease();
     }
 
     public synchronized void setCurrentUtility(double successQPS,double avgRt){
         currentUtility = qLearningMetric.calculateUtility(successQPS,avgRt);
         qLearningMetric.setCurrentUtility(currentUtility);
-        System.out.println("currentUtility = " + currentUtility);
+//        System.out.println("currentUtility = " + currentUtility);
     }
 
 
