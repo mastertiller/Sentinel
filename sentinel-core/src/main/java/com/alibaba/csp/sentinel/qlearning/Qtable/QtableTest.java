@@ -6,16 +6,37 @@ import java.util.HashMap;
 import java.util.Map;
 
 class QtableTest {
-    static ArrayList<Double> ans = new ArrayList<>();
-    static HashMap<String, Double> map = new HashMap<>();
+//    static ArrayList<Double> ans = new ArrayList<>();
+//    static HashMap<String, Double[]> map = new HashMap<>();
+
+//    {2.2, 3.4, ...}
+//    {[2.2, 3.4],}
+
+    static HashMap<String, double[]> Qtable = new HashMap<String, double[]>();
+
+//      key        value
+//    172*8/*/ 1.2 2.0
+//    2#3#1#4.4#5.9 2.0 2.0
 
     public static void main (String[] args) throws IOException {
 
-                save();
+        Qtable.put("2#3#1#4.4#5.9",new double[]{1.2,2.0});
+        Qtable.put("172*8/*/",new double[]{2.0,2.0});//如何做一个动态的写入信息呢？
+
+//        save();
 //        while (true) {
 //            readFile();
 //        }
+        readFile();
 
+        int ansNum = 0;
+
+        for (Map.Entry entry : map.entrySet()) {
+            String key = (String) entry.getKey();
+            double value = (double) entry.getValue();
+            String line = key + " " + ans.get(ansNum++) + " " +  ans.get(ansNum++) + " " +  value;
+            System.out.println(line);
+        }
     }
 
 //    static ArrayList<Double> ans;
@@ -34,12 +55,7 @@ class QtableTest {
 
 
     private static void save () {
-        ans.add(0,1.2);
-        ans.add(1,2.0);
-        ans.add(2,2.0);
-        ans.add(3,2.0);
-        map.put("2#3#1#4.4#5.9",100.0);
-        map.put("172*8/*/",5.0);//如何做一个动态的写入信息呢？
+
 //        map.put("185+54",186.0);
         // map = [<{"2#3#1#4.4#5.9", 100> <{" xs#sdfds", 2}]
         // txt = 2#3#1#4.4#5.9 1.1 2.3 100
@@ -74,25 +90,21 @@ class QtableTest {
         try (FileReader reader = new FileReader(pathname);
              BufferedReader br = new BufferedReader(reader) // 建立一个对象，它把文件内容转成计算机能读懂的语言
         ) {
-            String[] line = br.readLine().split(" ");//读取数据
+//             line = br.readLine().split(" ");//读取数据
 //            String[] temp = new String[0];
-
+            String line;
 
 
 
             while ((line = br.readLine()) != null) {
                 // 一次读入一行数据
-
-                for (int i = 0; i <line.length;i++){
+                String[] lineList = line.split(" ");
 //                 temp [i]= line[i];
-                    ans.add(Double.valueOf(line[i+1]));
-                    ans.add(Double.valueOf(line[i+2]));
-                    map.put(line[i], Double.valueOf(line[i+3]));
+                ans.add(Double.valueOf(lineList[1]));
+                ans.add(Double.valueOf(lineList[2]));
+                map.put(lineList[0], Double.valueOf(lineList[3]));
 
-                }
-
-                System.out.println(line);
-
+//                System.out.println();
             }
 
         } catch (IOException e) {
