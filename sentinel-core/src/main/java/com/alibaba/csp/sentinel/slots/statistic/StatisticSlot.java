@@ -52,13 +52,26 @@ import com.alibaba.csp.sentinel.slots.block.BlockException;
 @SpiOrder(-7000)
 public class StatisticSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
 
-    QLearningUpdateManager qLearningUpdateManager = new QLearningUpdateManager();//管理存储 和 执行 qlearning的方法
-
-
     @Override
     public void entry(Context context, ResourceWrapper resourceWrapper, DefaultNode node, int count,
                       boolean prioritized, Object... args) throws Throwable {
         try {
+//            System.out.println(" statistic slot. -----entry-----");
+
+            QLearningUpdateManager qLearningUpdateManager = new QLearningUpdateManager();//管理存储 和 执行 qlearning的方法
+
+            //        System.out.println(" statistic slot. -----exit-----");
+            //检查已经执行了行为后是否得到效用，需要更新Q值
+            qLearningUpdateManager.qLearningUpdate(Constants.ENTRY_NODE.successQps(),Constants.ENTRY_NODE.avgRt(),Constants.ENTRY_NODE.totalQps(),Constants.ENTRY_NODE.curThreadNum());
+
+
+            qLearningUpdateManager.takeAction(resourceWrapper.getName(),Constants.ENTRY_NODE.totalQps(),Constants.ENTRY_NODE.avgRt(),Constants.ENTRY_NODE.curThreadNum());
+
+
+//        System.out.println(resourceWrapper.getName());
+
+            //效用方程
+
             // Do some checking.
             fireEntry(context, resourceWrapper, node, count, prioritized, args);
 
@@ -130,8 +143,6 @@ public class StatisticSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
     public void exit(Context context, ResourceWrapper resourceWrapper, int count, Object... args) {
         Node node = context.getCurNode();
 
-        qLearningUpdateManager.setCurrentUtility(Constants.ENTRY_NODE.successQps(),Constants.ENTRY_NODE.avgRt());//效用方程
-
         // 统计Ut = log(QPS) - log(RT)
         //successQPS = Constants.ENTRY_NODE.successQps();
         //avg_RT = Constants.ENTRY_NODE.avgRt();
@@ -155,11 +166,24 @@ public class StatisticSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
             if (resourceWrapper.getEntryType() == EntryType.IN) {
                 recordCompleteFor(Constants.ENTRY_NODE, count, rt, error);
             }
-            qLearningUpdateManager.qLearningProcess(Constants.ENTRY_NODE.successQps(),Constants.ENTRY_NODE.avgRt());
+
         } else {
-            qLearningUpdateManager.qLearningProcess(Constants.ENTRY_NODE.successQps(),Constants.ENTRY_NODE.avgRt());
 
         }
+//        QLearningUpdateManager qLearningUpdateManager = new QLearningUpdateManager();//管理存储 和 执行 qlearning的方法
+//
+//        //        System.out.println(" statistic slot. -----exit-----");
+//        //检查已经执行了行为后是否得到效用，需要更新Q值
+//        qLearningUpdateManager.qLearningUpdate(Constants.ENTRY_NODE.successQps(),Constants.ENTRY_NODE.avgRt(),Constants.ENTRY_NODE.totalQps(),Constants.ENTRY_NODE.curThreadNum());
+//
+//
+//        qLearningUpdateManager.takeAction(resourceWrapper.getName(),Constants.ENTRY_NODE.totalQps(),Constants.ENTRY_NODE.avgRt(),Constants.ENTRY_NODE.curThreadNum());
+//
+//
+////        System.out.println(resourceWrapper.getName());
+//
+//        qLearningUpdateManager.setCurrentUtility(Constants.ENTRY_NODE.successQps(),Constants.ENTRY_NODE.avgRt());//效用方程
+
 
         // Handle exit event with registered exit callback handlers.
         Collection<ProcessorSlotExitCallback> exitCallbacks = StatisticSlotCallbackRegistry.getExitCallbacks();
