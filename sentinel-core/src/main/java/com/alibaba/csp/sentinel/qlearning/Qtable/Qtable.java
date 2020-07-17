@@ -13,12 +13,12 @@ public class Qtable {}
 //
 //        while (true) {
 //            double[][] qtable = {{5, 4, 3}, {7, 8, 9}, {6.5, 2}, {4, 8}};
-////            save(qtable);
-//            readFile();
-//        }
-//
-//    }
-//
+//            save(qtable);
+////            readFile();
+////        }
+////
+////    }
+////
 //    private static void save (double[][] Qtable) {
 //        //数组保存到文件中 txt  空格分隔
 //        try ( //改成相对路径
