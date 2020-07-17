@@ -1,7 +1,6 @@
 package com.alibaba.csp.sentinel.qlearning.Qtable;
 
 import java.io.*;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,7 +11,7 @@ class QtableTest {
 //    {2.2, 3.4, ...}
 //    {[2.2, 3.4],}
 
-    static HashMap<String, double[]> Qtable = new HashMap<String, double[]>();
+    static HashMap<String, Double[]> Qtable = new HashMap<>();
 
 //      key        value
 //    172*8/*/ 1.2 2.0
@@ -20,21 +19,20 @@ class QtableTest {
 
     public static void main (String[] args) throws IOException {
 
-        Qtable.put("2#3#1#4.4#5.9",new double[]{1.2,2.0});
-        Qtable.put("172*8/*/",new double[]{2.0,2.0});//如何做一个动态的写入信息呢？
+//        Qtable.put("2#3#1#4.4#5.9", new Double[]{1.2, 2.0});
+//        Qtable.put("11w242", new Double[]{1.5, 1.1});
+//        Qtable.put("172*8/*/",new double[]{2.0,2.0});//如何做一个动态的写入信息呢？
 
-//        save();
+//            save();
 //        while (true) {
 //            readFile();
 //        }
-        readFile();
+            readFile();
 
-        int ansNum = 0;
-
-        for (Map.Entry entry : map.entrySet()) {
+        for (Map.Entry entry : Qtable.entrySet()) {
             String key = (String) entry.getKey();
-            double value = (double) entry.getValue();
-            String line = key + " " + ans.get(ansNum++) + " " +  ans.get(ansNum++) + " " +  value;
+            double[] value = (double[]) entry.getValue();
+            String line = key + " " + value[0] + " " + value[1];
             System.out.println(line);
         }
     }
@@ -53,7 +51,6 @@ class QtableTest {
 //    }
 
 
-
     private static void save () {
 
 //        map.put("185+54",186.0);
@@ -61,12 +58,12 @@ class QtableTest {
         // txt = 2#3#1#4.4#5.9 1.1 2.3 100
         //数组保存到文件中 txt  空格分隔
         try ( //改成相对路径
-            PrintStream output = new PrintStream(new File("QtableData/test.txt"));) {
+              PrintStream output = new PrintStream(new File("QtableData/test.txt"));) {
             int ansNum = 0;
-            for (Map.Entry entry : map.entrySet()) {
+            for (Map.Entry entry : Qtable.entrySet()) {
                 String key = (String) entry.getKey();
-                double value = (double) entry.getValue();
-                String line = key + " " + ans.get(ansNum++) + " " +  ans.get(ansNum++) + " " +  value;
+                double[] value = (double[]) entry.getValue();
+                String line = key + " " + value[0] + " " + value[1];
                 output.println(line);
             }
         } catch (FileNotFoundException e) {
@@ -74,13 +71,13 @@ class QtableTest {
         }
     }
 
-    public HashMap<String, Double> getMap () {
-        return map;
-    }
-
-    public ArrayList<Double> getAns () {
-        return ans;
-    }
+//    public HashMap<String, Double> getMap () {
+//        return map;
+//    }
+//
+//    public ArrayList<Double> getAns () {
+//        return ans;
+//    }
 
 
     public static void readFile () throws IOException {
@@ -90,19 +87,16 @@ class QtableTest {
         try (FileReader reader = new FileReader(pathname);
              BufferedReader br = new BufferedReader(reader) // 建立一个对象，它把文件内容转成计算机能读懂的语言
         ) {
-//             line = br.readLine().split(" ");//读取数据
-//            String[] temp = new String[0];
+////             line = br.readLine().split(" ");//读取数据
+////            String[] temp = new String[0];
             String line;
-
 
 
             while ((line = br.readLine()) != null) {
                 // 一次读入一行数据
                 String[] lineList = line.split(" ");
-//                 temp [i]= line[i];
-                ans.add(Double.valueOf(lineList[1]));
-                ans.add(Double.valueOf(lineList[2]));
-                map.put(lineList[0], Double.valueOf(lineList[3]));
+                Double[] temp = new Double[]{Double.parseDouble(lineList[1]), Double.parseDouble(lineList[2])};
+                Qtable.put(lineList[0],temp);
 
 //                System.out.println();
             }
@@ -112,6 +106,7 @@ class QtableTest {
         }
 
     }
+}
 
 //        创建集合对象
 //        ArrayList<String> array = new ArrayList<>();
@@ -135,7 +130,6 @@ class QtableTest {
 
 
 
-    }
 
 
 
