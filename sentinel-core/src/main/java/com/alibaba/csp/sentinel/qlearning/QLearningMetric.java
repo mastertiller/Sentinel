@@ -28,7 +28,9 @@ public class QLearningMetric {
 
     //    private volatile int[] state = new int[5];
     private volatile HashMap<String, Integer> statesMap = new HashMap<>();
-
+    // statesmap =   2#3#4#5#6 (locatestate) statesmap 看一下他添加元素的方法，同样方法添加qtable的string的位置上。
+    // qtable = 2#3#4#5#6 double[2] = {2.2, 3.3}
+//              3#4#sdfsdf double[2] = {3.3, 4.4}
 
     private volatile int stateIndex;
     private volatile int action;
@@ -36,6 +38,9 @@ public class QLearningMetric {
     private volatile int statesCount;
 
     private volatile int actionsCount = actionValues.length;
+
+    // 旧： double[2] = {2.2, 3.3}
+    //     double[2] = {3.3, 4.4}   // 元素在哪里生成和添加到qtable里的，同样方法添加qtable的value的位置上。
 
     //    private volatile double[][] Qtable = new double[statesCount][actionsCount];
     private volatile ArrayList<double[]> Qtable = new ArrayList<double[]>();
