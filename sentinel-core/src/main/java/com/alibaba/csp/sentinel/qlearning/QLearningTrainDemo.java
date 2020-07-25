@@ -14,6 +14,7 @@ import com.alibaba.csp.sentinel.util.TimeUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -178,7 +179,7 @@ public class QLearningTrainDemo {
             printArray(qpsArray, "Success QPS");
             if (qLearningMetric.isQLearning()){
                 qLearningMetric.showPolicy();
-                ArrayList<double[]> qtable = qLearningMetric.getQtable();
+                HashMap<String, double[]> qtable = qLearningMetric.getQtable();
                 for ( int i = 0; i < qtable.size(); i ++){
                     System.out.println("state: " + i + "  block: " + qtable.get(i)[0] + "  accept: " + qtable.get(i)[1]);
                 }

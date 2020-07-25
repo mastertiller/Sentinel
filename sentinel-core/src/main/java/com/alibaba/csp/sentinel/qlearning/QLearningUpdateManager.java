@@ -17,7 +17,7 @@ import java.util.List;
 public class QLearningUpdateManager {
     QLearningMetric qLearningMetric = QLearningMetric.getInstance();
 
-    public int currentState;
+    public String currentState;//这里的currentstate为int类型，不同于metric里的
 
     public double currentUtility;
     public double nextUtility;
@@ -68,6 +68,7 @@ public class QLearningUpdateManager {
      *
      */
     public synchronized int chooseAction(double totalQps, double avgRt, int curThreadNum) {
+        //转换成int来操作,
         currentState = qLearningMetric.locateState(SystemRuleManager.getCurrentCpuUsage(),SystemRuleManager.getCurrentSystemAvgLoad(),totalQps,avgRt,curThreadNum);
         if (qLearningMetric.isTrain()) {
             //如果Qlearning正在训练，则随机选择动作，如果action = 0 执行block 如果 action= 1.执行accept

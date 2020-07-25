@@ -6,6 +6,7 @@ import java.util.*;
 
 /**
  * 该类为单例模式，保证了全局变量只能够访问一个公有对象 通过内部类来实现
+ * Qlearning算法 和 deepQlearning 相关的算法
  */
 public class QLearningMetric {
 
@@ -21,26 +22,25 @@ public class QLearningMetric {
 
     private volatile double utilityIncrease;
 
-    public HashMap<String, Integer> getStatesMap() {
-        return statesMap;
-    }
+
 
 
     //    private volatile int[] state = new int[5];
-    private volatile HashMap<String, Integer> statesMap = new HashMap<>();
 
 
-    private volatile int stateIndex;
+
+    private volatile String stateIndex;
     private volatile int action;
 
     private volatile int statesCount;
 
     private volatile int actionsCount = actionValues.length;
-
+//    private volatile HashMap<String, Integer> statesMap = new HashMap<>();
     //    private volatile double[][] Qtable = new double[statesCount][actionsCount];
-    private volatile ArrayList<double[]> Qtable = new ArrayList<double[]>();
+//    private volatile ArrayList<double[]> Qtable = new ArrayList<double[]>();
 //    private Set<Integer> cpuStates = new HashSet<Integer>();
-
+    private volatile HashMap<String, double[]> Qtable = new HashMap<>();//把statesMap里的string替换到Qtable当中
+//    private volatile HashMap<String, double[]> Qtable = new HashMap<>();//换成Arraylist
 
     private volatile int maxTrainNum = 10000;
     private volatile boolean isTrain = true;
@@ -97,7 +97,7 @@ public class QLearningMetric {
      *
      * @return
      */
-    public synchronized int locateState(double currentCpuUsage, double currentLoad, double totalQps, double Rt, int curThreadNum) {
+    public synchronized String locateState(double currentCpuUsage, double currentLoad, double totalQps, double Rt, int curThreadNum) {
 
         int stateC = new Double(currentCpuUsage / 0.1).intValue();
         int stateL = new Double(currentLoad / 0.1).intValue();
@@ -105,24 +105,29 @@ public class QLearningMetric {
         int stateR = new Double(Rt / 1).intValue();
         int stateT = new Double(curThreadNum / 50).intValue();
 
-        int stateIndex;
+        /**0.1
+         * 这里的stateindex是int类型 需要调整 以便对应后面的else情况
+         */
+
+//        int stateIndex;
 
         String currentState = stateC + "#" + stateL + "#" + stateQ + "#" + stateR + "#" + stateT;
-        if (!statesMap.containsKey(currentState)) {
+        if (!Qtable.containsKey(currentState)) {
 //                String.valueOf(stateC) + "#" + String.valueOf(stateL) + "#" + String.valueOf(stateQ) + "#" + String.valueOf(stateR) + "#" + String.valueOf(stateT))){
 //            setStateC(stateC);
 //            setStateL(stateL);
 //            setStateQ(stateQ);
 //            setStateR(stateR);
 //            setStateT(stateT);
-            stateIndex = statesMap.size();
-            statesMap.put(currentState, stateIndex);
-            Qtable.add(new double[actionsCount]);
-        } else {
-            stateIndex = statesMap.get(currentState);
+//            stateIndex = Qtable.size();
+            Qtable.put(currentState, new double[actionsCount]);
+            //返回current state
+
+        } else {//这里需要考虑再加一些其他因果 但是我暂时没想好 等结合了那个新的code再去改好了
+//             stateIndex = Qtable.get(currentState);
         }
-        setStateIndex(stateIndex);
-        return stateIndex;
+//        setStateIndex(stateIndex);
+//        return stateIndex;
 
 //        double currentload = 1;//后面删掉它 重新构建currentload
 //        double interval = 1 / getStateSum();
@@ -156,6 +161,7 @@ public class QLearningMetric {
 //
 //        setState(0);
 //        return getState();
+        return currentState;
     }
 
     public synchronized boolean isUpdate() {
@@ -180,7 +186,11 @@ public class QLearningMetric {
 
     public synchronized void updateQ(double avgRt, double totalQps, int curThreadNum) {
 
-        double q = getQValue(stateIndex, action);
+        /**0.2
+         * q的数据类型改成了数组 并且调整了qvalue的数据类型
+         */
+
+        double q = getQValue(stateIndex,action);
         //执行action之后的下一个state属于哪个state。
         //locateNextState();
 
@@ -191,7 +201,7 @@ public class QLearningMetric {
         double maxQ = getmaxQ(cpuUsage, load, avgRt, totalQps, curThreadNum);
 
 //        System.out.println(" getreward() " + getReward());
-
+        //输入变成currentstate 更新单次的对应返回值
         double qValue = q + delta * (getReward() + gamma * maxQ - q);//delta决定了奖励和下一状态的期望值的影响程度 gamma决定了maxQ的影响程度
 
 //        System.out.println(" stateIndex = " + stateIndex + " original q value = " + q + " update q value = " + qValue );
@@ -226,15 +236,19 @@ public class QLearningMetric {
         int stateR = new Double(Rt / 1).intValue();
         int stateT = new Double(curThreadNum / 50).intValue();
 
+        /**0.3
+         * NEXT也需要改成String
+         */
+
         String nextState = stateC + "#" + stateL + "#" + stateQ + "#" + stateR + "#" + stateT;
-        if (!statesMap.containsKey(nextState)) {
+        if (!Qtable.containsKey(nextState)) {
             return 0;
         } else {
-            int nextStateIndex = statesMap.get(nextState);
 
+//            double nextStateIndex = Qtable.get(nextState);//凡是index角标都扔了
             double maxValue = Double.MIN_VALUE;
             for (int i = 0; i < actionsCount; i++) {
-                double value = this.Qtable.get(nextStateIndex)[i];
+                double value = this.Qtable.get(nextState)[i];
 
                 if (value > maxValue) {
                     maxValue = value;
@@ -247,25 +261,31 @@ public class QLearningMetric {
     public void showPolicy() {
         int from;
         int to;
-        statesCount = statesMap.size();
+        statesCount = Qtable.size();
         System.out.println("\n ======= Show Policy =======" + statesCount);
 
         for (int i = 0; i < statesCount; i++) {
             from = i;
-            to = policy(from);
+            to = policy(String.valueOf(from));
             System.out.println("Current State: " + from + "       Action: " + actionNames[to] + "        Q: " + this.Qtable.get(from)[to]);
         }
     }
 
     // get policy from state
-    public int policy(int state) {
+
+    /**0.4
+     * 这块地action值不确定有没有用 应该是要返回相应数值的value应该是double数组类型吧？
+     * @param state
+     */
+
+    public int policy(String state) {//修改policy方法为相应数值 改成string更合适 intparsing方法不太合适
         double maxValue = Double.MIN_VALUE;
         // default goto self if not found
         int policyGotoAction = 0;
 
         for (int i = 0; i < actionsCount; i++) {
             int action = i;
-            double value = Qtable.get(state)[action];  //改成选取arraylist里面的值。
+            double value = Qtable.get(state)[action];
 
             if (value > maxValue) {
                 maxValue = value;
@@ -289,7 +309,8 @@ public class QLearningMetric {
 //        Qtable.get(state)[action] = q;
 //    }
 
-    public double getQValue(int state, int action) {
+
+    public double getQValue(String state, int action) {
         return this.Qtable.get(state)[action];
     }
 
@@ -301,9 +322,13 @@ public class QLearningMetric {
         return action;
     }
 
-    public synchronized void setQValue(int s, int a, double value) {
+    public synchronized void setQValue(String s, int a, double value) {
 //        if(Qtable.size() <= s) Qtable.add(new double[actionsCount]);
         Qtable.get(s)[a] = value;
+    }
+
+    public synchronized void setQtable (HashMap<String, double[]> qtable) {
+        Qtable = qtable;
     }
 
     public int getTrainNum() {
@@ -390,7 +415,7 @@ public class QLearningMetric {
     }
 
 
-    public ArrayList<double[]> getQtable() {
+    public HashMap<String, double[]> getQtable () {
         return Qtable;
     }
 
@@ -406,7 +431,7 @@ public class QLearningMetric {
 //        return stateIndex;
 //    }
 
-    public synchronized void setStateIndex(int stateIndex) {
+    public synchronized void setStateIndex(String stateIndex) {
         this.stateIndex = stateIndex;
     }
 
