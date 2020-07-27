@@ -7,14 +7,14 @@ import java.util.Map;
 public class QTable{
 
 
-    public static void save(HashMap<String, double[]> qTable) {
+    public static void save(HashMap<String, double[]> qTable,String filePath) {
 //        map.put("185+54",186.0);
 //         map = [<{"2#3#1#4.4#5.9", 100> <{" xs#sdfds", 2}]
 //         txt = 2#3#1#4.4#5.9 1.1 2.3 100
 //        数组保存到文件中 txt  空格分隔
 
         try ( //改成相对路径
-              PrintStream output = new PrintStream(new File("data-qtable/qTable.txt"));) {
+              PrintStream output = new PrintStream(new File(filePath));) {
 
             for (Map.Entry entry : qTable.entrySet()) {
                 String key = (String) entry.getKey();
