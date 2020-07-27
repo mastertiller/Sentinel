@@ -1,9 +1,8 @@
 package com.alibaba.csp.sentinel.qlearning;
 
 import com.alibaba.csp.sentinel.Constants;
-import com.alibaba.csp.sentinel.slots.block.RuleConstant;
+import com.alibaba.csp.sentinel.qlearning.demo.QLearningDemo;
 import com.alibaba.csp.sentinel.slots.block.flow.FlowRule;
-import com.alibaba.csp.sentinel.slots.block.flow.FlowRuleManager;
 import com.alibaba.csp.sentinel.util.TimeUtil;
 
 import java.util.ArrayList;

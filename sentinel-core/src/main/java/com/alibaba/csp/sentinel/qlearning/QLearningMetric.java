@@ -17,17 +17,9 @@ public class QLearningMetric {
 
     final int[] actionValues = new int[]{0, acceptValue};
 
-//    String[] stateNames = new String[]{"CPU Usage: UnGet", "CPU Usage: (0%, 25%)", "CPU Usage: (25%, 50%)", "CPU Usage: (50%, 75%)", "CPU Usage: (75%, 100%)"};
     String[] actionNames = new String[]{"Unchange", "Accept", "Block"};
 
     private volatile double utilityIncrease;
-
-
-
-
-    //    private volatile int[] state = new int[5];
-
-
 
     private volatile String stateIndex;
     private volatile int action;
@@ -35,13 +27,10 @@ public class QLearningMetric {
     private volatile int statesCount;
 
     private volatile int actionsCount = actionValues.length;
-//    private volatile HashMap<String, Integer> statesMap = new HashMap<>();
-    //    private volatile double[][] Qtable = new double[statesCount][actionsCount];
-//    private volatile ArrayList<double[]> Qtable = new ArrayList<double[]>();
-//    private Set<Integer> cpuStates = new HashSet<Integer>();
+
     private volatile HashMap<String, double[]> Qtable = new HashMap<>();//把statesMap里的string替换到Qtable当中
 //    private volatile HashMap<String, double[]> Qtable = new HashMap<>();//换成Arraylist
-
+    
     private volatile int maxTrainNum = 10000;
     private volatile boolean isTrain = true;
 
@@ -71,6 +60,8 @@ public class QLearningMetric {
 
     private volatile double currentUtility;
     private volatile double nextUtility;
+
+    private String state;
 
     public synchronized boolean ifTakeAction() {
         addActionIntervalCount();
@@ -109,58 +100,15 @@ public class QLearningMetric {
          * 这里的stateindex是int类型 需要调整 以便对应后面的else情况
          */
 
-//        int stateIndex;
-
         String currentState = stateC + "#" + stateL + "#" + stateQ + "#" + stateR + "#" + stateT;
         if (!Qtable.containsKey(currentState)) {
-//                String.valueOf(stateC) + "#" + String.valueOf(stateL) + "#" + String.valueOf(stateQ) + "#" + String.valueOf(stateR) + "#" + String.valueOf(stateT))){
-//            setStateC(stateC);
-//            setStateL(stateL);
-//            setStateQ(stateQ);
-//            setStateR(stateR);
-//            setStateT(stateT);
-//            stateIndex = Qtable.size();
+
             Qtable.put(currentState, new double[actionsCount]);
             //返回current state
-
         } else {//这里需要考虑再加一些其他因果 但是我暂时没想好 等结合了那个新的code再去改好了
 //             stateIndex = Qtable.get(currentState);
         }
-//        setStateIndex(stateIndex);
-//        return stateIndex;
-
-//        double currentload = 1;//后面删掉它 重新构建currentload
-//        double interval = 1 / getStateSum();
-//        double stateNum = currentCpuUsage / interval;
-//        int i = new Double(stateNum).intValue();//double 转int的问题
-//        int j = new Double(currentload / interval).intValue();
-//
-//        if (i < 0 | j < 0) {
-//            setState(0);
-//        } else {
-//            setState(i * 10 + j + 1);
-//        }
-//        return getState();
-
-//        if (0 <= currentCpuUsage && currentCpuUsage < 0.25) {
-//            setState(1);
-//            return getState();
-//        }
-//        if (0.25 <= currentCpuUsage && currentCpuUsage < 0.5) {
-//            setState(2);
-//            return getState();
-//        }
-//        if (0.5 <= currentCpuUsage && currentCpuUsage < 0.75) {
-//            setState(3);
-//            return getState();
-//        }
-//        if (0.75 <= currentCpuUsage && currentCpuUsage <= 1) {
-//            setState(4);
-//            return getState();
-//        }
-//
-//        setState(0);
-//        return getState();
+        this.state = currentState;
         return currentState;
     }
 
@@ -259,15 +207,15 @@ public class QLearningMetric {
     }
 
     public void showPolicy() {
-        int from;
-        int to;
+        String fromState;
+        int toAction;
         statesCount = Qtable.size();
         System.out.println("\n ======= Show Policy =======" + statesCount);
 
-        for (int i = 0; i < statesCount; i++) {
-            from = i;
-            to = policy(String.valueOf(from));
-            System.out.println("Current State: " + from + "       Action: " + actionNames[to] + "        Q: " + this.Qtable.get(from)[to]);
+        for (Map.Entry entry : Qtable.entrySet()) {
+            fromState = (String) entry.getKey();
+            toAction = policy(fromState);
+            System.out.println("Current State: " + fromState + "       Action: " + actionNames[toAction] + "        Q Value: " + this.Qtable.get(fromState)[toAction]);
         }
     }
 
@@ -305,11 +253,6 @@ public class QLearningMetric {
         return utilityIncrease;
     }
 
-//    public synchronized void setQValue(int state, int action, double q) {
-//        Qtable.get(state)[action] = q;
-//    }
-
-
     public double getQValue(String state, int action) {
         return this.Qtable.get(state)[action];
     }
@@ -325,10 +268,6 @@ public class QLearningMetric {
     public synchronized void setQValue(String s, int a, double value) {
 //        if(Qtable.size() <= s) Qtable.add(new double[actionsCount]);
         Qtable.get(s)[a] = value;
-    }
-
-    public synchronized void setQtable (HashMap<String, double[]> qtable) {
-        Qtable = qtable;
     }
 
     public int getTrainNum() {

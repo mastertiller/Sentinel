@@ -1,9 +1,11 @@
-package com.alibaba.csp.sentinel.qlearning;
+package com.alibaba.csp.sentinel.qlearning.demo;
 
 import com.alibaba.csp.sentinel.Constants;
 import com.alibaba.csp.sentinel.Entry;
 import com.alibaba.csp.sentinel.EntryType;
 import com.alibaba.csp.sentinel.SphU;
+import com.alibaba.csp.sentinel.qlearning.QLearningMetric;
+import com.alibaba.csp.sentinel.qlearning.qtable.QTable;
 import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.alibaba.csp.sentinel.slots.block.RuleConstant;
 import com.alibaba.csp.sentinel.slots.block.flow.FlowRule;
@@ -35,12 +37,13 @@ public class QLearningTrainDemo {
     private static ArrayList<Double> qpsArray = new ArrayList<Double>();
 
     private static volatile boolean stop = false;
-    private static final int threadCount = 20;//当前线程数
+    private static final int threadCount = 100;//当前线程数
 
     private static int seconds = 20;//整个程序运行时间
 
     private static boolean isQLearning = true;
     //set a switch， when it is true it will employ Qlearnig algorithm. If not it will use BBR algorithm.
+    private static String qTablePath = "sentinel-core/src/main/java/com/alibaba/csp/sentinel/qlearning/demo/" + QLearningTrainDemo.class.getSimpleName() + "-QTable.txt";
 
     public static void main(String[] args) throws Exception {
 
@@ -60,14 +63,14 @@ public class QLearningTrainDemo {
                             entry = SphU.entry("methodA", EntryType.IN);
                             pass.incrementAndGet();
                             try {
-                                TimeUnit.MILLISECONDS.sleep(50);
+                                TimeUnit.MILLISECONDS.sleep(20);
                             } catch (InterruptedException e) {
                                 // ignore
                             }
                         } catch (BlockException e1) {
                             block.incrementAndGet();
                             try {
-                                TimeUnit.MILLISECONDS.sleep(50);
+                                TimeUnit.MILLISECONDS.sleep(20);
                             } catch (InterruptedException e) {
                                 // ignore
                             }
@@ -133,6 +136,8 @@ public class QLearningTrainDemo {
 
 
     static class TimerTask implements Runnable {
+
+
         @Override
         public void run() {
             System.out.println("begin to statistic!!!");
@@ -180,9 +185,11 @@ public class QLearningTrainDemo {
             if (qLearningMetric.isQLearning()){
                 qLearningMetric.showPolicy();
                 HashMap<String, double[]> qtable = qLearningMetric.getQtable();
-                for ( int i = 0; i < qtable.size(); i ++){
-                    System.out.println("state: " + i + "  block: " + qtable.get(i)[0] + "  accept: " + qtable.get(i)[1]);
-                }
+                QTable qTableTrain = new QTable();
+                qTableTrain.save(qtable,qTablePath);
+//                for ( int i = 0; i < qtable.size(); i ++){
+//                    System.out.println("state: " + i + "  block: " + qtable.get(i)[0] + "  accept: " + qtable.get(i)[1]);
+//                }
             }
             System.exit(0);
         }

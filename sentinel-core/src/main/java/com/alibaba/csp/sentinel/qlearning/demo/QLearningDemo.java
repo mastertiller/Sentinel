@@ -1,4 +1,4 @@
-package com.alibaba.csp.sentinel.qlearning;
+package com.alibaba.csp.sentinel.qlearning.demo;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -7,6 +7,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import com.alibaba.csp.sentinel.Constants;
 import com.alibaba.csp.sentinel.EntryType;
+import com.alibaba.csp.sentinel.qlearning.QLearningMetric;
 import com.alibaba.csp.sentinel.util.TimeUtil;
 import com.alibaba.csp.sentinel.Entry;
 import com.alibaba.csp.sentinel.SphU;

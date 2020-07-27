@@ -24,7 +24,6 @@ public class QLearningSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
         //检查已经执行了行为后是否得到效用，需要更新Q值
         qLearningUpdateManager.qLearningUpdate(Constants.ENTRY_NODE.successQps(),Constants.ENTRY_NODE.avgRt(),Constants.ENTRY_NODE.totalQps(),Constants.ENTRY_NODE.curThreadNum());
 
-
         qLearningUpdateManager.takeAction(resourceWrapper.getName(),Constants.ENTRY_NODE.totalQps(),Constants.ENTRY_NODE.avgRt(),Constants.ENTRY_NODE.curThreadNum());
 
 //        System.out.println("Exiting for entry on QLearningSlot: " + context.getCurEntry().getResourceWrapper().getName());
