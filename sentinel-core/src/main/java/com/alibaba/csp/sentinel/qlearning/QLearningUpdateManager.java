@@ -32,7 +32,7 @@ public class QLearningUpdateManager {
         // 不用判断isTrain().仅当QLearning为true，且actionIntervalCount为10的倍数时，返回true。
         if (qLearningMetric.isQLearning() && qLearningMetric.ifTakeAction()) {
             qLearningMetric.addTrainNum();
-            System.out.println(" in take action ().");
+
             int actionValue = chooseAction(totalQps,avgRt,curThreadNum);
             setCurrentUtility(Constants.ENTRY_NODE.successQps(),Constants.ENTRY_NODE.avgRt());
 
@@ -70,11 +70,11 @@ public class QLearningUpdateManager {
     public synchronized int chooseAction(double totalQps, double avgRt, int curThreadNum) {
         //转换成int来操作,
         currentState = qLearningMetric.locateState(SystemRuleManager.getCurrentCpuUsage(),SystemRuleManager.getCurrentSystemAvgLoad(),totalQps,avgRt,curThreadNum);
-        System.out.println(" chooseAction .");
+//        System.out.println(" chooseAction .");
         if (qLearningMetric.isTrain()) {
             //如果Qlearning正在训练，则随机选择动作，如果action = 0 执行block 如果 action= 1.执行accept
             randActionValue = qLearningMetric.randomActionValue();
-            System.out.println(" ** " + randActionValue + " ** " + qLearningMetric.getActionIntervalCount() + " ** ");
+//            System.out.println(" ** " + randActionValue + " ** " + qLearningMetric.getActionIntervalCount() + " ** ");
             return randActionValue;
         } else {
             //会从已经训练出来的policy当中选出 最大奖励期望值的action
@@ -91,10 +91,15 @@ public class QLearningUpdateManager {
      * 执行完Action并发挥效用后，计算奖励并更新Q值
      */
     public synchronized void qLearningUpdate(double successQPS, double avgRt, double totalQps, int curThreadNum) {
+//    public void qLearningUpdate(double successQPS, double avgRt, double totalQps, int curThreadNum) {
+//        System.out.println("Current context。");
         if (qLearningMetric.isQLearning() && qLearningMetric.isTrain() && qLearningMetric.isUpdate()) {
             // 记录当前的增量。
+//            System.out.println("Current context: ");
             recordUtilityIncrease(successQPS, avgRt);
+//            System.out.println("Current context: ");
             qLearningMetric.updateQ(avgRt, totalQps, curThreadNum);
+//            System.out.println("Current context: ");
 //            } else {
 //                qLearningMetric.setTrain(false);
 //                //System.out.println("-------------------TRAINING END--------------------");

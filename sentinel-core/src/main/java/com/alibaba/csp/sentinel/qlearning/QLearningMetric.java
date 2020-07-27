@@ -27,11 +27,11 @@ public class QLearningMetric {
     private volatile int statesCount;
 
     private volatile int actionsCount = actionValues.length;
-
+    // todo: concurrent
     private volatile HashMap<String, double[]> Qtable = new HashMap<>();//把statesMap里的string替换到Qtable当中
 //    private volatile HashMap<String, double[]> Qtable = new HashMap<>();//换成Arraylist
     
-    private volatile int maxTrainNum = 10000;
+    private volatile int maxTrainNum = 1000000;
     private volatile boolean isTrain = true;
 
     private volatile int trainNum = 0; //当前训练到第几次
@@ -39,8 +39,8 @@ public class QLearningMetric {
     private double alpha = 1;//alpha控制了效用方程的qps的参数
     private double beta = 0.2;//控制了效用方程的RT的参数
 
-    private double delta = 1;
-    private double gamma = 1;
+    private double delta = 0.8;
+    private double gamma = 0.2;
 
     private double tolerance = 0.0001;
 
@@ -69,7 +69,7 @@ public class QLearningMetric {
 
     public synchronized boolean ifTakeAction() {
         addActionIntervalCount();
-        System.out.println(actionIntervalCount);
+//        System.out.println(actionIntervalCount);
         if (this.actionIntervalCount < this.actionInterval) {
             return false;
         } else if (this.actionIntervalCount == this.actionInterval) {
@@ -103,7 +103,7 @@ public class QLearningMetric {
         }
 //        int stateL = new Double(currentLoad / 0.1).intValue();
         int stateQ = new Double(totalQps / 100).intValue();
-        int stateR = new Double(Rt / 1).intValue();
+        int stateR = new Double(Rt / 5).intValue();
         int stateT = new Double(curThreadNum / 50).intValue();
 
         /**0.1
@@ -148,24 +148,27 @@ public class QLearningMetric {
         /**0.2
          * q的数据类型改成了数组 并且调整了qvalue的数据类型
          */
-
-        double q = getQValue(stateIndex,action);
+//        System.out.println("Current context: ");
+        double q = getQValue(state,action);
+//        System.out.print("state: " + state + "  q: " + q);
+//        System.out.println("Current context: ");
         //执行action之后的下一个state属于哪个state。
         //locateNextState();
 
         double cpuUsage = SystemRuleManager.getCurrentCpuUsage();
         double load = SystemRuleManager.getCurrentSystemAvgLoad();
 //        int nextState = locateState();
-
+//        System.out.println("Current context: ");
         double maxQ = getmaxQ(cpuUsage, load, avgRt, totalQps, curThreadNum);
+//        System.out.println("Current context: ");
 
 //        System.out.println(" getreward() " + getReward());
         //输入变成currentstate 更新单次的对应返回值
         double qValue = q + delta * (getReward() + gamma * maxQ - q);//delta决定了奖励和下一状态的期望值的影响程度 gamma决定了maxQ的影响程度
 
 //        System.out.println(" stateIndex = " + stateIndex + " original q value = " + q + " update q value = " + qValue );
-
-        setQValue(stateIndex, action, qValue);
+//        System.out.println("  new q: " + qValue);
+        setQValue(state, action, qValue);
     }
 
     public synchronized int getReward() {
@@ -265,6 +268,7 @@ public class QLearningMetric {
     }
 
     public double getQValue(String state, int action) {
+//        throw new IllegalArgumentException();
         return this.Qtable.get(state)[action];
     }
 
