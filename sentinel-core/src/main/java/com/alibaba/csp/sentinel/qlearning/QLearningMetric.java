@@ -49,6 +49,10 @@ public class QLearningMetric {
 
     private int actionInterval = 10;
 
+
+
+    private boolean ifCheckCPU;
+
 //    public int getUpdateInterval() {
 //        return updateInterval;
 //    }
@@ -65,6 +69,7 @@ public class QLearningMetric {
 
     public synchronized boolean ifTakeAction() {
         addActionIntervalCount();
+        System.out.println(actionIntervalCount);
         if (this.actionIntervalCount < this.actionInterval) {
             return false;
         } else if (this.actionIntervalCount == this.actionInterval) {
@@ -89,9 +94,14 @@ public class QLearningMetric {
      * @return
      */
     public synchronized String locateState(double currentCpuUsage, double currentLoad, double totalQps, double Rt, int curThreadNum) {
-
-        int stateC = new Double(currentCpuUsage / 0.1).intValue();
-        int stateL = new Double(currentLoad / 0.1).intValue();
+        int stateC;
+        if(ifCheckCPU){
+            stateC = new Double(currentCpuUsage / 0.1).intValue();
+        }
+        else{
+            stateC = -10;
+        }
+//        int stateL = new Double(currentLoad / 0.1).intValue();
         int stateQ = new Double(totalQps / 100).intValue();
         int stateR = new Double(Rt / 1).intValue();
         int stateT = new Double(curThreadNum / 50).intValue();
@@ -100,7 +110,8 @@ public class QLearningMetric {
          * 这里的stateindex是int类型 需要调整 以便对应后面的else情况
          */
 
-        String currentState = stateC + "#" + stateL + "#" + stateQ + "#" + stateR + "#" + stateT;
+        String currentState = stateC + " | " + stateQ + " | " + stateR + " | " + stateT;
+
         if (!Qtable.containsKey(currentState)) {
 
             Qtable.put(currentState, new double[actionsCount]);
@@ -178,17 +189,17 @@ public class QLearningMetric {
 
     public synchronized double getmaxQ(double currentCpuUsage, double currentLoad, double totalQps, double Rt, int curThreadNum) {
 
-        int stateC = new Double(currentCpuUsage / 0.1).intValue();
-        int stateL = new Double(currentLoad / 0.1).intValue();
+        if(ifCheckCPU) {
+            int stateC = new Double(currentCpuUsage / 0.1).intValue();
+        }
+        int stateC = -10;
+//        int stateL = new Double(currentLoad / 0.1).intValue();
         int stateQ = new Double(totalQps / 100).intValue();
         int stateR = new Double(Rt / 1).intValue();
         int stateT = new Double(curThreadNum / 50).intValue();
 
-        /**0.3
-         * NEXT也需要改成String
-         */
-
-        String nextState = stateC + "#" + stateL + "#" + stateQ + "#" + stateR + "#" + stateT;
+//        String nextState = stateC + "#" + stateL + "#" + stateQ + "#" + stateR + "#" + stateT;
+        String nextState = stateC + " | " + stateQ + " | " + stateR + " | " + stateT;
         if (!Qtable.containsKey(nextState)) {
             return 0;
         } else {
@@ -401,6 +412,14 @@ public class QLearningMetric {
 
     public static QLearningMetric getInstance() {
         return QLearningMetricContainer.instance;
+    }
+
+    public boolean isIfCheckCPU() {
+        return ifCheckCPU;
+    }
+
+    public void setIfCheckCPU(boolean ifCheckCPU) {
+        this.ifCheckCPU = ifCheckCPU;
     }
 
 }

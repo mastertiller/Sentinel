@@ -125,7 +125,7 @@ public class QLearningDemo {
         timer.start();
     }
 
-    static class TimerTask implements Runnable {
+    public static class TimerTask implements Runnable {
 
         @Override
         public void run() {

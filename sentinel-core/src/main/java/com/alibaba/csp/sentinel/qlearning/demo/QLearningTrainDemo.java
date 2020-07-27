@@ -37,7 +37,7 @@ public class QLearningTrainDemo {
     private static ArrayList<Double> qpsArray = new ArrayList<Double>();
 
     private static volatile boolean stop = false;
-    private static final int threadCount = 100;//当前线程数
+    private static final int threadCount = 1;//当前线程数
 
     private static int seconds = 20;//整个程序运行时间
 
@@ -45,10 +45,14 @@ public class QLearningTrainDemo {
     //set a switch， when it is true it will employ Qlearnig algorithm. If not it will use BBR algorithm.
     private static String qTablePath = "sentinel-core/src/main/java/com/alibaba/csp/sentinel/qlearning/demo/" + QLearningTrainDemo.class.getSimpleName() + "-QTable.txt";
 
+    //如果考虑CPU这个state，为true
+    private static boolean ifCheckCPU = false;
+
     public static void main(String[] args) throws Exception {
 
         QLearningMetric qLearningMetric = QLearningMetric.getInstance();
         qLearningMetric.setQLearning(isQLearning);
+        qLearningMetric.setIfCheckCPU(ifCheckCPU);
 
         tick();
         initSystemRule();

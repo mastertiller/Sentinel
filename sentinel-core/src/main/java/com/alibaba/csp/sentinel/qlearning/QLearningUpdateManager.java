@@ -32,7 +32,7 @@ public class QLearningUpdateManager {
         // 不用判断isTrain().仅当QLearning为true，且actionIntervalCount为10的倍数时，返回true。
         if (qLearningMetric.isQLearning() && qLearningMetric.ifTakeAction()) {
             qLearningMetric.addTrainNum();
-//            System.out.println(" in take action ().");
+            System.out.println(" in take action ().");
             int actionValue = chooseAction(totalQps,avgRt,curThreadNum);
             setCurrentUtility(Constants.ENTRY_NODE.successQps(),Constants.ENTRY_NODE.avgRt());
 
@@ -70,12 +70,11 @@ public class QLearningUpdateManager {
     public synchronized int chooseAction(double totalQps, double avgRt, int curThreadNum) {
         //转换成int来操作,
         currentState = qLearningMetric.locateState(SystemRuleManager.getCurrentCpuUsage(),SystemRuleManager.getCurrentSystemAvgLoad(),totalQps,avgRt,curThreadNum);
+        System.out.println(" chooseAction .");
         if (qLearningMetric.isTrain()) {
             //如果Qlearning正在训练，则随机选择动作，如果action = 0 执行block 如果 action= 1.执行accept
-
-
             randActionValue = qLearningMetric.randomActionValue();
-//            System.out.println(" ** " + randActionValue + " ** " + qLearningMetric.getActionIntervalCount() + " ** ");
+            System.out.println(" ** " + randActionValue + " ** " + qLearningMetric.getActionIntervalCount() + " ** ");
             return randActionValue;
         } else {
             //会从已经训练出来的policy当中选出 最大奖励期望值的action
