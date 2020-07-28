@@ -31,13 +31,13 @@ public class QLearningMetric {
     private volatile HashMap<String, double[]> Qtable = new HashMap<>();//把statesMap里的string替换到Qtable当中
 //    private volatile HashMap<String, double[]> Qtable = new HashMap<>();//换成Arraylist
     
-    private volatile int maxTrainNum = 1000000;
+    private volatile int maxTrainNum = 10000;
     private volatile boolean isTrain = true;
 
     private volatile int trainNum = 0; //当前训练到第几次
 
     private double alpha = 1;//alpha控制了效用方程的qps的参数
-    private double beta = 0.2;//控制了效用方程的RT的参数
+    private double beta = 0;//控制了效用方程的RT的参数
 
     private double delta = 0.8;
     private double gamma = 0.2;
@@ -66,6 +66,18 @@ public class QLearningMetric {
     private volatile double nextUtility;
 
     private String state;
+
+    public int getOldStateCount() {
+        return oldStateCount;
+    }
+
+    private volatile int oldStateCount;
+
+    public int getNewStateCount() {
+        return newStateCount;
+    }
+
+    private volatile int newStateCount;
 
     public synchronized boolean ifTakeAction() {
         addActionIntervalCount();
@@ -113,10 +125,15 @@ public class QLearningMetric {
         String currentState = stateC + " | " + stateQ + " | " + stateR + " | " + stateT;
 
         if (!Qtable.containsKey(currentState)) {
-
+            if(!isTrain()){
+                newStateCount ++;
+            }
             Qtable.put(currentState, new double[actionsCount]);
             //返回current state
         } else {//这里需要考虑再加一些其他因果 但是我暂时没想好 等结合了那个新的code再去改好了
+            if(!isTrain()){
+                oldStateCount ++;
+            }
 //             stateIndex = Qtable.get(currentState);
         }
         this.state = currentState;
@@ -220,7 +237,7 @@ public class QLearningMetric {
         }
     }
 
-    public void showPolicy() {
+    public synchronized void showPolicy() {
         String fromState;
         int toAction;
         statesCount = Qtable.size();

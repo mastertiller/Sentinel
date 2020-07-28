@@ -37,7 +37,7 @@ public class QLearningTrainDemo {
     private static ArrayList<Double> qpsArray = new ArrayList<Double>();
 
     private static volatile boolean stop = false;
-    private static final int threadCount = 100;//当前线程数
+    private static final int threadCount = 3000;//当前线程数
 
     private static int seconds = 30;//整个程序运行时间
 
@@ -67,14 +67,14 @@ public class QLearningTrainDemo {
                             entry = SphU.entry("methodA", EntryType.IN);
                             pass.incrementAndGet();
                             try {
-                                TimeUnit.MILLISECONDS.sleep(10);
+                                TimeUnit.MILLISECONDS.sleep(500);
                             } catch (InterruptedException e) {
                                 // ignore
                             }
                         } catch (BlockException e1) {
                             block.incrementAndGet();
                             try {
-                                TimeUnit.MILLISECONDS.sleep(10);
+                                TimeUnit.MILLISECONDS.sleep(500);
                             } catch (InterruptedException e) {
                                 // ignore
                             }
@@ -187,6 +187,7 @@ public class QLearningTrainDemo {
             printArray(avgRTArray, "Average RT");
             printArray(qpsArray, "Success QPS");
             if (qLearningMetric.isQLearning()){
+                System.out.println(" new state number: " + qLearningMetric.getNewStateCount() + "   old state number: " + qLearningMetric.getOldStateCount());
                 qLearningMetric.showPolicy();
                 HashMap<String, double[]> qtable = qLearningMetric.getQtable();
                 QTable qTableTrain = new QTable();
