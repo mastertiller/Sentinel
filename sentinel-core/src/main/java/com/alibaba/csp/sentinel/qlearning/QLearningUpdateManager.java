@@ -34,6 +34,9 @@ public class QLearningUpdateManager {
             qLearningMetric.addTrainNum();
 
             int actionValue = chooseAction(totalQps,avgRt,curThreadNum);
+//            if (!qLearningMetric.isTrain()) {
+//                System.out.println(actionValue);
+//            }
             setCurrentUtility(Constants.ENTRY_NODE.successQps(),Constants.ENTRY_NODE.avgRt());
 
 //            //通过改变QPS限流规则来更改Accept和Block的数量
@@ -79,7 +82,7 @@ public class QLearningUpdateManager {
         } else {
             //会从已经训练出来的policy当中选出 最大奖励期望值的action
             int bestActionValue = qLearningMetric.policy(currentState);
-
+//            System.out.println("   bestAction: " + bestActionValue);
             return bestActionValue;
 
         }

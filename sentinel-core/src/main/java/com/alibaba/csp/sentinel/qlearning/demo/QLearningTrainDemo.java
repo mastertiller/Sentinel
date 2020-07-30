@@ -37,9 +37,9 @@ public class QLearningTrainDemo {
     private static ArrayList<Double> qpsArray = new ArrayList<Double>();
 
     private static volatile boolean stop = false;
-    private static final int threadCount = 3000;//当前线程数
+    private static final int threadCount = 2000;//当前线程数
 
-    private static int seconds = 30;//整个程序运行时间
+    private static int seconds = 50;//整个程序运行时间
 
     private static boolean isQLearning = true;
     //set a switch， when it is true it will employ Qlearnig algorithm. If not it will use BBR algorithm.
@@ -67,14 +67,14 @@ public class QLearningTrainDemo {
                             entry = SphU.entry("methodA", EntryType.IN);
                             pass.incrementAndGet();
                             try {
-                                TimeUnit.MILLISECONDS.sleep(500);
+                                TimeUnit.MILLISECONDS.sleep(900);
                             } catch (InterruptedException e) {
                                 // ignore
                             }
                         } catch (BlockException e1) {
                             block.incrementAndGet();
                             try {
-                                TimeUnit.MILLISECONDS.sleep(500);
+                                TimeUnit.MILLISECONDS.sleep(900);
                             } catch (InterruptedException e) {
                                 // ignore
                             }

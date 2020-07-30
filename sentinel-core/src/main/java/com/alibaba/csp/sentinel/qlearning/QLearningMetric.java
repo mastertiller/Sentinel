@@ -30,14 +30,14 @@ public class QLearningMetric {
     // todo: concurrent
     private volatile HashMap<String, double[]> Qtable = new HashMap<>();//把statesMap里的string替换到Qtable当中
 //    private volatile HashMap<String, double[]> Qtable = new HashMap<>();//换成Arraylist
-    
-    private volatile int maxTrainNum = 10000;
+
+    private volatile int maxTrainNum = 50000;
     private volatile boolean isTrain = true;
 
     private volatile int trainNum = 0; //当前训练到第几次
 
     private double alpha = 1;//alpha控制了效用方程的qps的参数
-    private double beta = 0;//控制了效用方程的RT的参数
+    private double beta = 0.2;//控制了效用方程的RT的参数
 
     private double delta = 0.8;
     private double gamma = 0.2;
@@ -48,7 +48,6 @@ public class QLearningMetric {
     private int punishValue = -1;
 
     private int actionInterval = 10;
-
 
 
     private boolean ifCheckCPU;
@@ -80,13 +79,14 @@ public class QLearningMetric {
     private volatile int newStateCount;
 
     public synchronized boolean ifTakeAction() {
-        addActionIntervalCount();
 //        System.out.println(actionIntervalCount);
-        if (this.actionIntervalCount < this.actionInterval) {
-            return false;
-        } else if (this.actionIntervalCount == this.actionInterval) {
+        if (this.actionIntervalCount == 0 || this.actionIntervalCount == this.actionInterval) {
             this.actionIntervalCount = 0;
+            addActionIntervalCount();
             return true;
+        } else if (this.actionIntervalCount < this.actionInterval) {
+            addActionIntervalCount();
+            return false;
         }
         System.out.println("error in if take action ().");
         return false;
@@ -107,10 +107,9 @@ public class QLearningMetric {
      */
     public synchronized String locateState(double currentCpuUsage, double currentLoad, double totalQps, double Rt, int curThreadNum) {
         int stateC;
-        if(ifCheckCPU){
+        if (ifCheckCPU) {
             stateC = new Double(currentCpuUsage / 0.1).intValue();
-        }
-        else{
+        } else {
             stateC = -10;
         }
 //        int stateL = new Double(currentLoad / 0.1).intValue();
@@ -125,16 +124,20 @@ public class QLearningMetric {
         String currentState = stateC + " | " + stateQ + " | " + stateR + " | " + stateT;
 
         if (!Qtable.containsKey(currentState)) {
-            if(!isTrain()){
-                newStateCount ++;
+            if (!isTrain()) {
+                newStateCount++;
+//                System.out.print("new State: " + currentState);
             }
             Qtable.put(currentState, new double[actionsCount]);
             //返回current state
-        } else {//这里需要考虑再加一些其他因果 但是我暂时没想好 等结合了那个新的code再去改好了
-            if(!isTrain()){
-                oldStateCount ++;
+        } else if (Qtable.containsKey(currentState)) {//这里需要考虑再加一些其他因果 但是我暂时没想好 等结合了那个新的code再去改好了
+            if (!isTrain()) {
+                oldStateCount++;
+//                System.out.print("old State: " + currentState);
             }
 //             stateIndex = Qtable.get(currentState);
+        } else {
+            System.out.println("Error in get state from Q table.");
         }
         this.state = currentState;
         return currentState;
@@ -166,7 +169,7 @@ public class QLearningMetric {
          * q的数据类型改成了数组 并且调整了qvalue的数据类型
          */
 //        System.out.println("Current context: ");
-        double q = getQValue(state,action);
+        double q = getQValue(state, action);
 //        System.out.print("state: " + state + "  q: " + q);
 //        System.out.println("Current context: ");
         //执行action之后的下一个state属于哪个state。
@@ -209,7 +212,7 @@ public class QLearningMetric {
 
     public synchronized double getmaxQ(double currentCpuUsage, double currentLoad, double totalQps, double Rt, int curThreadNum) {
 
-        if(ifCheckCPU) {
+        if (ifCheckCPU) {
             int stateC = new Double(currentCpuUsage / 0.1).intValue();
         }
         int stateC = -10;
@@ -252,12 +255,14 @@ public class QLearningMetric {
 
     // get policy from state
 
-    /**0.4
+    /**
+     * 0.4
      * 这块地action值不确定有没有用 应该是要返回相应数值的value应该是double数组类型吧？
+     *
      * @param state
      */
 
-    public int policy(String state) {//修改policy方法为相应数值 改成string更合适 intparsing方法不太合适
+    public synchronized int policy(String state) {//修改policy方法为相应数值 改成string更合适 intparsing方法不太合适
         double maxValue = Double.MIN_VALUE;
         // default goto self if not found
         int policyGotoAction = 0;
@@ -386,7 +391,7 @@ public class QLearningMetric {
     }
 
 
-    public HashMap<String, double[]> getQtable () {
+    public HashMap<String, double[]> getQtable() {
         return Qtable;
     }
 
