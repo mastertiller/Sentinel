@@ -3,6 +3,7 @@ package com.alibaba.csp.sentinel.qlearning.demo;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -200,7 +201,7 @@ public class QLearningDemo {
             if (qLearningMetric.isQLearning()){
                 System.out.println(" new state number: " + qLearningMetric.getNewStateCount() + "   old state number: " + qLearningMetric.getOldStateCount());
                 qLearningMetric.showPolicy();
-                HashMap<String, double[]> qtable = qLearningMetric.getQtable();
+                ConcurrentHashMap<String, double[]> qtable = qLearningMetric.getQtable();
                 QTable qTableTrain = new QTable();
                 qTableTrain.save(qtable,qTablePath);
             }

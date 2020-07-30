@@ -8,6 +8,7 @@ import com.alibaba.csp.sentinel.util.TimeUtil;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -150,7 +151,7 @@ public class QLearningTraining {
     }
 
     public static void saveQtable(){
-        HashMap<String, double[]> qTable = qLearningMetric.getQtable();
+        ConcurrentHashMap<String, double[]> qTable = qLearningMetric.getQtable();
         //存入新的
     }
 

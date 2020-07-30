@@ -3,11 +3,12 @@ package com.alibaba.csp.sentinel.qlearning.qtable;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class QTable{
 
 
-    public synchronized static void save(HashMap<String, double[]> qTable,String filePath) {
+    public synchronized static void save(ConcurrentHashMap<String, double[]> qTable, String filePath) {
 //        map.put("185+54",186.0);
 //         map = [<{"2#3#1#4.4#5.9", 100> <{" xs#sdfds", 2}]
 //         txt = 2#3#1#4.4#5.9 1.1 2.3 100
@@ -28,8 +29,8 @@ public class QTable{
     }
 
 
-    public static HashMap<String, double[]> read(String pathname) throws IOException {
-        HashMap<String, double[]> qTable = new HashMap<>();
+    public static ConcurrentHashMap<String, double[]> read(String pathname) throws IOException {
+        ConcurrentHashMap<String, double[]> qTable = new ConcurrentHashMap<>();
 //        String pathname = "QTableData/test.txt"; // 绝对路径或相对路径都可以，写入文件时演示相对路径,读取以上路径的input.txt文件
         //防止文件建立或读取失败，用catch捕捉错误并打印，也可以throw;
         // {"2#3#1#4.4#5.9", 4, 3}

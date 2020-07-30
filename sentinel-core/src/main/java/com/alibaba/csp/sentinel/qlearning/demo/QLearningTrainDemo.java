@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 /*
@@ -39,7 +40,7 @@ public class QLearningTrainDemo {
     private static volatile boolean stop = false;
     private static final int threadCount = 2000;//当前线程数
 
-    private static int seconds = 10;//整个程序运行时间
+    private static int seconds = 40;//整个程序运行时间
 
     private static boolean isQLearning = true;
     //set a switch， when it is true it will employ Qlearnig algorithm. If not it will use BBR algorithm.
@@ -189,7 +190,7 @@ public class QLearningTrainDemo {
             if (qLearningMetric.isQLearning()){
                 System.out.println(" new state number: " + qLearningMetric.getNewStateCount() + "   old state number: " + qLearningMetric.getOldStateCount());
                 qLearningMetric.showPolicy();
-                HashMap<String, double[]> qtable = qLearningMetric.getQtable();
+                ConcurrentHashMap<String, double[]> qtable = qLearningMetric.getQtable();
                 QTable qTableTrain = new QTable();
                 qTableTrain.save(qtable,qTablePath);
 //                for ( int i = 0; i < qtable.size(); i ++){

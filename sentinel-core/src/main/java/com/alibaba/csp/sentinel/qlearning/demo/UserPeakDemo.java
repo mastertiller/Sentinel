@@ -10,6 +10,7 @@ import com.alibaba.csp.sentinel.util.TimeUtil;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -240,7 +241,7 @@ public class UserPeakDemo {
             if (qLearningMetric.isQLearning()){
                 System.out.println(" new state number: " + qLearningMetric.getNewStateCount() + "   old state number: " + qLearningMetric.getOldStateCount());
                 qLearningMetric.showPolicy();
-                HashMap<String, double[]> qtable = qLearningMetric.getQtable();
+                ConcurrentHashMap<String, double[]> qtable = qLearningMetric.getQtable();
 
                 qTableTrain.save(qtable,qTablePath);
 //                for ( int i = 0; i < qtable.size(); i ++){

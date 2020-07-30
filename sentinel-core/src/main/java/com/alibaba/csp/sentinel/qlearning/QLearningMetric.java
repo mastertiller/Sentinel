@@ -3,6 +3,9 @@ package com.alibaba.csp.sentinel.qlearning;
 import com.alibaba.csp.sentinel.slots.system.SystemRuleManager;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 该类为单例模式，保证了全局变量只能够访问一个公有对象 通过内部类来实现
@@ -28,12 +31,12 @@ public class QLearningMetric {
 
     private volatile int actionsCount = actionValues.length;
 
-    public void setQtable(HashMap<String, double[]> qtable) {
+    public void setQtable(ConcurrentHashMap<String, double[]> qtable) {
         Qtable = qtable;
     }
 
     // todo: concurrent
-    private volatile HashMap<String, double[]> Qtable = new HashMap<>();//把statesMap里的string替换到Qtable当中
+    private volatile ConcurrentHashMap<String, double[]> Qtable = new ConcurrentHashMap<>();//把statesMap里的string替换到Qtable当中
 //    private volatile HashMap<String, double[]> Qtable = new HashMap<>();//换成Arraylist
 
     private volatile int maxTrainNum = 5000000;
@@ -63,7 +66,7 @@ public class QLearningMetric {
 
     private int updateInterval = actionInterval - 1;
 
-    private volatile int actionIntervalCount = 0;
+    private AtomicInteger actionIntervalCount = new AtomicInteger(0);
 
 
     private volatile double currentUtility;
@@ -83,16 +86,41 @@ public class QLearningMetric {
 
     private volatile int newStateCount;
 
-    public synchronized boolean ifTakeAction() {
-//        System.out.println(actionIntervalCount);
-        if (this.actionIntervalCount == 0 || this.actionIntervalCount == this.actionInterval) {
-            this.actionIntervalCount = 0;
-            addActionIntervalCount();
+    static volatile ConcurrentLinkedQueue<TemptQInfo> queue = new ConcurrentLinkedQueue<TemptQInfo>();
+
+    public synchronized void addQInfo(TemptQInfo temptQInfo) {
+        queue.offer(temptQInfo);
+    }
+
+    public synchronized TemptQInfo pollQInfo() {
+        return queue.poll();
+    }
+
+    public synchronized boolean ifBlock() {
+        TemptQInfo lastQInfo = queue.peek();
+        if (lastQInfo.getAction() == 0) {
             return true;
-        } else if (this.actionIntervalCount < this.actionInterval) {
+        }
+        return true;
+    }
+
+    public boolean ifTakeAction() {
+//        System.out.println(actionIntervalCount);
+
+//        System.out.println("hhhhhhhhhhhhhhhhhhh");
+        if (this.actionIntervalCount.get() == 0 || this.actionIntervalCount.get() >= this.actionInterval) {
+//            System.out.println("hhhhhhhhhhhhhhhhhhh");
+            this.actionIntervalCount.getAndSet(0);
+//            System.out.println("hhhhhhhhhhhhhhhhhhh");
+            this.actionIntervalCount.incrementAndGet();
+
+            return true;
+        } else if (this.actionIntervalCount.get() < this.actionInterval) {
+//            System.out.println("ffffffffffffffffffffffff");
             addActionIntervalCount();
             return false;
         }
+        System.out.println("hhhhhhhhhhhhhhhhhhh");
         System.out.println("error in if take action ().");
         return false;
     }
@@ -100,7 +128,7 @@ public class QLearningMetric {
     public synchronized int randomActionValue() {
         int randValue = new Random().nextInt(actionsCount);
         setAction(randValue); //记录执行的动作
-        return actionValues[randValue];
+        return randValue;
     }
 
 
@@ -151,7 +179,7 @@ public class QLearningMetric {
     }
 
     public synchronized boolean isUpdate() {
-        if (getTrainNum() > 0 && getActionIntervalCount() == updateInterval) {
+        if (getTrainNum() > 1 && getActionIntervalCount() == updateInterval) {
 //            addUpdateIntervalCount();
 //            System.out.print(updateIntervalCount);
 //            if (getUpdateIntervalCount() < getUpdateInterval()) {
@@ -175,8 +203,9 @@ public class QLearningMetric {
         /**0.2
          * q的数据类型改成了数组 并且调整了qvalue的数据类型
          */
+        TemptQInfo lastQInfo = pollQInfo();
 //        System.out.println("Current context: ");
-        double q = getQValue(this.state, this.action);
+        double q = getQValue(lastQInfo.getState(), lastQInfo.getAction());
 //        System.out.print("state: " + state + "  q: " + q);
 //        System.out.println("Current context: ");
         //执行action之后的下一个state属于哪个state。
@@ -195,7 +224,7 @@ public class QLearningMetric {
 
 //        System.out.println(" stateIndex = " + stateIndex + " original q value = " + q + " update q value = " + qValue );
 //        System.out.println("  new q: " + qValue);
-        setQValue(this.state, this.action, qValue);
+        setQValue(lastQInfo.getState(), lastQInfo.getAction(), qValue);
     }
 
     public synchronized int getReward() {
@@ -214,15 +243,17 @@ public class QLearningMetric {
     }
 
     public synchronized void recordUtilityIncrease() {
-        this.utilityIncrease = this.nextUtility - this.currentUtility;
+        /**@ 7.30
+
+         */
+        this.utilityIncrease = this.nextUtility - queue.peek().getUtility();
     }
 
     public synchronized double getmaxQ(double currentCpuUsage, double currentLoad, double totalQps, double Rt, int curThreadNum) {
         int stateC;
         if (ifCheckCPU) {
             stateC = new Double(currentCpuUsage / 0.1).intValue();
-        }
-        else {
+        } else {
             stateC = -10;
         }
 //        int stateL = new Double(currentLoad / 0.1).intValue();
@@ -400,7 +431,7 @@ public class QLearningMetric {
     }
 
 
-    public HashMap<String, double[]> getQtable() {
+    public ConcurrentHashMap<String, double[]> getQtable() {
         return Qtable;
     }
 
@@ -408,28 +439,16 @@ public class QLearningMetric {
         this.maxTrainNum = maxTrainNum;
     }
 
-//    public void setStatesMap(HashMap<String, Integer> statesMap) {
-//        this.statesMap = statesMap;
-//    }
-//
-//    public int getStateIndex() {
-//        return stateIndex;
-//    }
-
-    public synchronized void setStateIndex(String stateIndex) {
-        this.stateIndex = stateIndex;
-    }
-
     public int getActionIntervalCount() {
-        return actionIntervalCount;
+        return actionIntervalCount.get();
     }
 
 //    public void setActionIntervalCount(int actionIntervalCount) {
 //        this.actionIntervalCount = actionIntervalCount;
 //    }
 
-    public synchronized void addActionIntervalCount() {
-        this.actionIntervalCount = this.actionIntervalCount + 1;
+    public void addActionIntervalCount() {
+        this.actionIntervalCount.incrementAndGet();
     }
 
     public synchronized void setCurrentUtility(double currentUtility) {
