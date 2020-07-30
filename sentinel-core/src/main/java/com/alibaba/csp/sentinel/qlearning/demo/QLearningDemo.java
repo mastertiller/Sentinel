@@ -1,6 +1,7 @@
 package com.alibaba.csp.sentinel.qlearning.demo;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -8,6 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import com.alibaba.csp.sentinel.Constants;
 import com.alibaba.csp.sentinel.EntryType;
 import com.alibaba.csp.sentinel.qlearning.QLearningMetric;
+import com.alibaba.csp.sentinel.qlearning.qtable.QTable;
 import com.alibaba.csp.sentinel.util.TimeUtil;
 import com.alibaba.csp.sentinel.Entry;
 import com.alibaba.csp.sentinel.SphU;
@@ -37,12 +39,18 @@ public class QLearningDemo {
     private static volatile int methodBRunningTime = 1000;
 
     private static boolean isQLearning = true;
+    //如果考虑CPU这个state，为true
+    private static boolean ifCheckCPU = false;
+
+    private static String qTablePath = "sentinel-core/src/main/java/com/alibaba/csp/sentinel/qlearning/demo/" + QLearningDemo.class.getSimpleName() + "-QTable.txt";
+
     //set a switch， when it is true it will employ Qlearnig algorithm. If not it will use BBR algorithm.
 
     public static void main(String[] args) throws Exception {
 
         QLearningMetric qLearningMetric = QLearningMetric.getInstance();
         qLearningMetric.setQLearning(isQLearning);
+        qLearningMetric.setIfCheckCPU(ifCheckCPU);
 
         System.out.println(
                 "MethodA will call methodB. After running for a while, methodB becomes fast, "
@@ -89,7 +97,7 @@ public class QLearningDemo {
     }
 
     private static void initFlowThreadRule() {
-        List<FlowRule> rules = new ArrayList<FlowRule>();
+//        List<FlowRule> rules = new ArrayList<FlowRule>();
 //
 //        FlowRule rule1 = new FlowRule();
 //        rule1.setResource(KEY);
@@ -108,15 +116,15 @@ public class QLearningDemo {
 //        qLearningMetric.setRules(rules);
 //        FlowRuleManager.loadRules(rules);
 
-        FlowRule rule3 = new FlowRule();
-        rule3.setResource("methodA");
-        // set limit concurrent thread for 'methodA' to 20
-        rule3.setCount(20);
-        rule3.setGrade(RuleConstant.FLOW_GRADE_THREAD);
-        rule3.setLimitApp("default");
-
-        rules.add(rule3);
-        FlowRuleManager.loadRules(rules);
+//        FlowRule rule3 = new FlowRule();
+//        rule3.setResource("methodA");
+//        // set limit concurrent thread for 'methodA' to 20
+//        rule3.setCount(20);
+//        rule3.setGrade(RuleConstant.FLOW_GRADE_THREAD);
+//        rule3.setLimitApp("default");
+//
+//        rules.add(rule3);
+//        FlowRuleManager.loadRules(rules);
     }
 
     private static void tick() {
@@ -162,7 +170,6 @@ public class QLearningDemo {
                         + ", block:" + oneSecondBlock
                         + " activeThread:" + activeThread.get());
 
-
                 System.out.print(" TEST ----- " + successQps);
                 avgRTArray.add(avgRt);
                 qpsArray.add(successQps);
@@ -191,7 +198,11 @@ public class QLearningDemo {
             printArray(avgRTArray, "Average RT");
             printArray(qpsArray, "Success QPS");
             if (qLearningMetric.isQLearning()){
+                System.out.println(" new state number: " + qLearningMetric.getNewStateCount() + "   old state number: " + qLearningMetric.getOldStateCount());
                 qLearningMetric.showPolicy();
+                HashMap<String, double[]> qtable = qLearningMetric.getQtable();
+                QTable qTableTrain = new QTable();
+                qTableTrain.save(qtable,qTablePath);
             }
             System.exit(0);
         }

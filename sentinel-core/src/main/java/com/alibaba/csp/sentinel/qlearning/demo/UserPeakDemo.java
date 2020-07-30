@@ -2,9 +2,13 @@ package com.alibaba.csp.sentinel.qlearning.demo;
 
 import com.alibaba.csp.sentinel.Entry;
 import com.alibaba.csp.sentinel.SphU;
+import com.alibaba.csp.sentinel.qlearning.QLearningMetric;
+import com.alibaba.csp.sentinel.qlearning.qtable.QTable;
 import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.alibaba.csp.sentinel.util.TimeUtil;
 
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -21,10 +25,28 @@ public class UserPeakDemo {
     private static volatile boolean stop2 = false;
     private static volatile boolean start2 = false;
     private static volatile boolean flag = false;
-    private static final int threadCount = 100;
+    private static final int threadCount = 500;
     private static int seconds = 60 + 40;
 
+    static QLearningMetric qLearningMetric = QLearningMetric.getInstance();
+    static QTable qTableTrain = new QTable();
+
+    private static boolean isQLearning = true;
+    //set a switch， when it is true it will employ Qlearnig algorithm. If not it will use BBR algorithm.
+    private static String qTablePath = "sentinel-core/src/main/java/com/alibaba/csp/sentinel/qlearning/demo/" + Thread.currentThread().getStackTrace()[1].getClassName() + "-QTable.txt";
+
+    //如果考虑CPU这个state，为true
+    private static boolean ifCheckCPU = false;
+
     public static void main(String[] args) throws Exception {
+
+        QLearningMetric qLearningMetric = QLearningMetric.getInstance();
+        qLearningMetric.setQLearning(isQLearning);
+        qLearningMetric.setIfCheckCPU(ifCheckCPU);
+
+//        if(qLearningMetric.isQLearning()){
+//            qLearningMetric.setQtable(qTableTrain.read(qTablePath));
+//        }
 
         Entry entry = null;
         try {
@@ -37,7 +59,7 @@ public class UserPeakDemo {
         }
 
         tick();
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 50; i++) {
             Thread t = new Thread(new StableTask());
             t.setName("stable-task");
             t.start();
@@ -66,6 +88,11 @@ public class UserPeakDemo {
                     entry = SphU.entry(KEY);
                     // token acquired, means pass
                     pass.incrementAndGet();
+                    try {
+                        TimeUnit.MILLISECONDS.sleep(50);
+                    } catch (InterruptedException e) {
+                        // ignore
+                    }
                 } catch (BlockException e1) {
                     block.incrementAndGet();
                 } catch (Exception e2) {
@@ -76,12 +103,12 @@ public class UserPeakDemo {
                         entry.exit();
                     }
                 }
-                Random random2 = new Random();
-                try {
-                    TimeUnit.MILLISECONDS.sleep(random2.nextInt(2000));
-                } catch (InterruptedException e) {
-                    // ignore
-                }
+//                Random random2 = new Random();
+//                try {
+//                    TimeUnit.MILLISECONDS.sleep(random2.nextInt(2000));
+//                } catch (InterruptedException e) {
+//                    // ignore
+//                }
             }
         }
     }
@@ -93,6 +120,11 @@ public class UserPeakDemo {
                 try {
                     entry = SphU.entry(KEY);
                     pass.addAndGet(1);
+                    try {
+                        TimeUnit.MILLISECONDS.sleep(50);
+                    } catch (InterruptedException e) {
+                        // ignore
+                    }
                 } catch (BlockException e1) {
                     block.incrementAndGet();
                 } catch (Exception e2) {
@@ -103,12 +135,12 @@ public class UserPeakDemo {
                         entry.exit();
                     }
                 }
-                Random random2 = new Random();
-                try {
-                    TimeUnit.MILLISECONDS.sleep(random2.nextInt(2));
-                } catch (InterruptedException e) {
-                    // ignore
-                }
+//                Random random2 = new Random();
+//                try {
+//                    TimeUnit.MILLISECONDS.sleep(random2.nextInt(2));
+//                } catch (InterruptedException e) {
+//                    // ignore
+//                }
             }
         }
     }
@@ -121,6 +153,11 @@ public class UserPeakDemo {
                 try {
                     entry = SphU.entry(KEY);
                     pass.addAndGet(1);
+                    try {
+                        TimeUnit.MILLISECONDS.sleep(50);
+                    } catch (InterruptedException e) {
+                        // ignore
+                    }
                 } catch (BlockException e1) {
                     block.incrementAndGet();
                 } catch (Exception e2) {
@@ -131,12 +168,12 @@ public class UserPeakDemo {
                         entry.exit();
                     }
                 }
-                Random random2 = new Random();
-                try {
-                    TimeUnit.MILLISECONDS.sleep(random2.nextInt(2));
-                } catch (InterruptedException e) {
-                    // ignore
-                }
+//                Random random2 = new Random();
+//                try {
+//                    TimeUnit.MILLISECONDS.sleep(random2.nextInt(2));
+//                } catch (InterruptedException e) {
+//                    // ignore
+//                }
             }
         }
     }
@@ -175,9 +212,14 @@ public class UserPeakDemo {
                 oldBlock = globalBlock;
 
                 System.out.println(seconds + " send qps is: " + oneSecondTotal);
-                System.out.println(TimeUtil.currentTimeMillis() + ", total:" + oneSecondTotal
+                System.out.print(TimeUtil.currentTimeMillis() + ", total:" + oneSecondTotal
                         + ", pass:" + oneSecondPass
                         + ", block:" + oneSecondBlock);
+                if (qLearningMetric.isQLearning() && qLearningMetric.isTrain()) {
+                    System.out.println(" ------now is training------ ");
+                } else {
+                    System.out.println();
+                }
 
                 if(seconds <= 70) {
                     stop1 = true;
@@ -194,6 +236,17 @@ public class UserPeakDemo {
             System.out.println("time cost: " + cost + " ms");
             System.out.println("total:" + total.get() + ", pass:" + pass.get()
                     + ", block:" + block.get());
+
+            if (qLearningMetric.isQLearning()){
+                System.out.println(" new state number: " + qLearningMetric.getNewStateCount() + "   old state number: " + qLearningMetric.getOldStateCount());
+                qLearningMetric.showPolicy();
+                HashMap<String, double[]> qtable = qLearningMetric.getQtable();
+
+                qTableTrain.save(qtable,qTablePath);
+//                for ( int i = 0; i < qtable.size(); i ++){
+//                    System.out.println("state: " + i + "  block: " + qtable.get(i)[0] + "  accept: " + qtable.get(i)[1]);
+//                }
+            }
             System.exit(0);
         }
     }

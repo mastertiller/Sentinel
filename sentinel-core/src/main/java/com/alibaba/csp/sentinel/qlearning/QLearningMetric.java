@@ -22,16 +22,21 @@ public class QLearningMetric {
     private volatile double utilityIncrease;
 
     private volatile String stateIndex;
-    private volatile int action = -1;
+    private volatile int action;
 
     private volatile int statesCount;
 
     private volatile int actionsCount = actionValues.length;
+
+    public void setQtable(HashMap<String, double[]> qtable) {
+        Qtable = qtable;
+    }
+
     // todo: concurrent
     private volatile HashMap<String, double[]> Qtable = new HashMap<>();//把statesMap里的string替换到Qtable当中
 //    private volatile HashMap<String, double[]> Qtable = new HashMap<>();//换成Arraylist
 
-    private volatile int maxTrainNum = 50000;
+    private volatile int maxTrainNum = 5000000;
     private volatile boolean isTrain = true;
 
     private volatile int trainNum = 0; //当前训练到第几次
@@ -121,13 +126,14 @@ public class QLearningMetric {
          * 这里的stateindex是int类型 需要调整 以便对应后面的else情况
          */
 
-        String currentState = stateC + " | " + stateQ + " | " + stateR + " | " + stateT;
+        String currentState = stateC + "#" + stateQ + "#" + stateR + "#" + stateT;
 
         if (!Qtable.containsKey(currentState)) {
             if (!isTrain()) {
                 newStateCount++;
 //                System.out.print("new State: " + currentState);
             }
+//            System.out.println("training - new State: " + currentState);
             Qtable.put(currentState, new double[actionsCount]);
             //返回current state
         } else if (Qtable.containsKey(currentState)) {//这里需要考虑再加一些其他因果 但是我暂时没想好 等结合了那个新的code再去改好了
@@ -135,6 +141,7 @@ public class QLearningMetric {
                 oldStateCount++;
 //                System.out.print("old State: " + currentState);
             }
+//            System.out.println("training - old State: " + currentState);
 //             stateIndex = Qtable.get(currentState);
         } else {
             System.out.println("Error in get state from Q table.");
@@ -169,7 +176,7 @@ public class QLearningMetric {
          * q的数据类型改成了数组 并且调整了qvalue的数据类型
          */
 //        System.out.println("Current context: ");
-        double q = getQValue(state, action);
+        double q = getQValue(this.state, this.action);
 //        System.out.print("state: " + state + "  q: " + q);
 //        System.out.println("Current context: ");
         //执行action之后的下一个state属于哪个state。
@@ -188,7 +195,7 @@ public class QLearningMetric {
 
 //        System.out.println(" stateIndex = " + stateIndex + " original q value = " + q + " update q value = " + qValue );
 //        System.out.println("  new q: " + qValue);
-        setQValue(state, action, qValue);
+        setQValue(this.state, this.action, qValue);
     }
 
     public synchronized int getReward() {
@@ -211,18 +218,20 @@ public class QLearningMetric {
     }
 
     public synchronized double getmaxQ(double currentCpuUsage, double currentLoad, double totalQps, double Rt, int curThreadNum) {
-
+        int stateC;
         if (ifCheckCPU) {
-            int stateC = new Double(currentCpuUsage / 0.1).intValue();
+            stateC = new Double(currentCpuUsage / 0.1).intValue();
         }
-        int stateC = -10;
+        else {
+            stateC = -10;
+        }
 //        int stateL = new Double(currentLoad / 0.1).intValue();
         int stateQ = new Double(totalQps / 100).intValue();
         int stateR = new Double(Rt / 1).intValue();
         int stateT = new Double(curThreadNum / 50).intValue();
 
 //        String nextState = stateC + "#" + stateL + "#" + stateQ + "#" + stateR + "#" + stateT;
-        String nextState = stateC + " | " + stateQ + " | " + stateR + " | " + stateT;
+        String nextState = stateC + "#" + stateQ + "#" + stateR + "#" + stateT;
         if (!Qtable.containsKey(nextState)) {
             return 0;
         } else {

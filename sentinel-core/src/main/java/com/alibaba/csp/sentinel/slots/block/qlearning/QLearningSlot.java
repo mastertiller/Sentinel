@@ -29,11 +29,16 @@ public class QLearningSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
 
 //        System.out.println("Exiting for entry on QLearningSlot: " + context.getCurEntry().getResourceWrapper().getName());
         // 注意：要改，因为action初始化为0，必然block前10个请求。
-        if(qLearningMetric.getAction() == 0){
+        if(qLearningMetric.isQLearning()){
+            if(qLearningMetric.getAction() == 1){
 //            System.out.println("- block - " + qLearningMetric.getActionIntervalCount());
-            //改成AdaptiveException
-            throw new SystemBlockException(resourceWrapper.getName(), "q-learning");
+                //改成AdaptiveException
+            }
+            else{
+                throw new SystemBlockException(resourceWrapper.getName(), "q-learning");
+            }
         }
+
 
         fireEntry(context, resourceWrapper, node, count, prioritized, args);
     }

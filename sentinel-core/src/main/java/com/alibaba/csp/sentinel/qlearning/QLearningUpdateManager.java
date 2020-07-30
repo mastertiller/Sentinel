@@ -23,9 +23,6 @@ public class QLearningUpdateManager {
     public double nextUtility;
     public double utilityIncrease;
 
-    int randActionValue;
-
-
 
     public synchronized void takeAction(String resourceWrapperName, double totalQps, double avgRt, int curThreadNum){
 
@@ -72,11 +69,11 @@ public class QLearningUpdateManager {
      */
     public synchronized int chooseAction(double totalQps, double avgRt, int curThreadNum) {
         //转换成int来操作,
-        currentState = qLearningMetric.locateState(SystemRuleManager.getCurrentCpuUsage(),SystemRuleManager.getCurrentSystemAvgLoad(),totalQps,avgRt,curThreadNum);
+        currentState = qLearningMetric.locateState(SystemRuleManager.getCurrentCpuUsage(),SystemRuleManager.getCurrentSystemAvgLoad(),Constants.ENTRY_NODE.totalQps(),Constants.ENTRY_NODE.avgRt(),Constants.ENTRY_NODE.curThreadNum());
 //        System.out.println(" chooseAction .");
         if (qLearningMetric.isTrain()) {
             //如果Qlearning正在训练，则随机选择动作，如果action = 0 执行block 如果 action= 1.执行accept
-            randActionValue = qLearningMetric.randomActionValue();
+            int randActionValue = qLearningMetric.randomActionValue();
 //            System.out.println(" ** " + randActionValue + " ** " + qLearningMetric.getActionIntervalCount() + " ** ");
             return randActionValue;
         } else {

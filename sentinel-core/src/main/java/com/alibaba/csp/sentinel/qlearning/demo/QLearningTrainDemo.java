@@ -39,7 +39,7 @@ public class QLearningTrainDemo {
     private static volatile boolean stop = false;
     private static final int threadCount = 2000;//当前线程数
 
-    private static int seconds = 50;//整个程序运行时间
+    private static int seconds = 10;//整个程序运行时间
 
     private static boolean isQLearning = true;
     //set a switch， when it is true it will employ Qlearnig algorithm. If not it will use BBR algorithm.
