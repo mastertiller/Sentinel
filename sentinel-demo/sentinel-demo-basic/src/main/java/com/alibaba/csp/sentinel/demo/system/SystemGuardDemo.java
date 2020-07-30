@@ -87,21 +87,21 @@ public class SystemGuardDemo {
     }
 
     private static void initSystemRule() {
-//        List<SystemRule> rules = new ArrayList<SystemRule>();
-//        SystemRule rule = new SystemRule();
-//        // max load is 3
-//        rule.setHighestSystemLoad(3.0);
-//        // max cpu usage is 60%
-//        rule.setHighestCpuUsage(0.6);
-//        // max avg rt of all request is 10 ms
-//        rule.setAvgRt(10);
-//        // max total qps is 20
-//        rule.setQps(20);
-//        // max parallel working thread is 10
-//        rule.setMaxThread(10);
-//
-//        rules.add(rule);
-//        SystemRuleManager.loadRules(Collections.singletonList(rule));
+        List<SystemRule> rules = new ArrayList<SystemRule>();
+        SystemRule rule = new SystemRule();
+        // max load is 3
+        rule.setHighestSystemLoad(3.0);
+        // max cpu usage is 60%
+        rule.setHighestCpuUsage(0.6);
+        // max avg rt of all request is 10 ms
+        rule.setAvgRt(10);
+        // max total qps is 20
+        rule.setQps(20);
+        // max parallel working thread is 10
+        rule.setMaxThread(10);
+
+        rules.add(rule);
+        SystemRuleManager.loadRules(Collections.singletonList(rule));
     }
 
     private static void tick() {

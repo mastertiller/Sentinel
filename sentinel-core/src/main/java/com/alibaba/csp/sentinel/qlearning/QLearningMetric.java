@@ -10,7 +10,7 @@ import java.util.*;
  */
 public class QLearningMetric {
 
-    private boolean isQLearning;
+    private boolean isQLearning = false;
 
     final int acceptValue = 10;
     final int blockValue = acceptValue; //不相等的话无法判断何时更新Q值，需更改updateInterval和qLearningUpdateManager.isUpdate()
@@ -22,7 +22,7 @@ public class QLearningMetric {
     private volatile double utilityIncrease;
 
     private volatile String stateIndex;
-    private volatile int action;
+    private volatile int action = -1;
 
     private volatile int statesCount;
 

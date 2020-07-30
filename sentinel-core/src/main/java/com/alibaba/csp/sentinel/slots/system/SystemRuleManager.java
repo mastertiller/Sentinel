@@ -297,9 +297,9 @@ public final class SystemRuleManager {
             return;
         }
         // Ensure the checking switch is on.
-//        if (!checkSystemStatus.get()) {
-//            return;
-//        }
+        if (!checkSystemStatus.get()) {
+            return;
+        }
 
         // for inbound traffic only
         if (resourceWrapper.getEntryType() != EntryType.IN) {
