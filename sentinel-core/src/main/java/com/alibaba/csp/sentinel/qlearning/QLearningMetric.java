@@ -203,28 +203,34 @@ public class QLearningMetric {
         /**0.2
          * q的数据类型改成了数组 并且调整了qvalue的数据类型
          */
-        TemptQInfo lastQInfo = pollQInfo();
+        try {
+            TemptQInfo lastQInfo = pollQInfo();
 //        System.out.println("Current context: ");
-        double q = getQValue(lastQInfo.getState(), lastQInfo.getAction());
+            double q = getQValue(lastQInfo.getState(), lastQInfo.getAction());
 //        System.out.print("state: " + state + "  q: " + q);
 //        System.out.println("Current context: ");
-        //执行action之后的下一个state属于哪个state。
-        //locateNextState();
+            //执行action之后的下一个state属于哪个state。
+            //locateNextState();
 
-        double cpuUsage = SystemRuleManager.getCurrentCpuUsage();
-        double load = SystemRuleManager.getCurrentSystemAvgLoad();
+            double cpuUsage = SystemRuleManager.getCurrentCpuUsage();
+            double load = SystemRuleManager.getCurrentSystemAvgLoad();
 //        int nextState = locateState();
 //        System.out.println("Current context: ");
-        double maxQ = getmaxQ(cpuUsage, load, avgRt, totalQps, curThreadNum);
+            double maxQ = getmaxQ(cpuUsage, load, avgRt, totalQps, curThreadNum);
 //        System.out.println("Current context: ");
 
 //        System.out.println(" getreward() " + getReward());
-        //输入变成currentstate 更新单次的对应返回值
-        double qValue = q + delta * (getReward() + gamma * maxQ - q);//delta决定了奖励和下一状态的期望值的影响程度 gamma决定了maxQ的影响程度
+            //输入变成currentstate 更新单次的对应返回值
+            double qValue = q + delta * (getReward() + gamma * maxQ - q);//delta决定了奖励和下一状态的期望值的影响程度 gamma决定了maxQ的影响程度
 
 //        System.out.println(" stateIndex = " + stateIndex + " original q value = " + q + " update q value = " + qValue );
 //        System.out.println("  new q: " + qValue);
-        setQValue(lastQInfo.getState(), lastQInfo.getAction(), qValue);
+            setQValue(lastQInfo.getState(), lastQInfo.getAction(), qValue);
+        }
+        catch(Exception e){
+            System.out.println("poll error.");
+            e.printStackTrace();
+        }
     }
 
     public synchronized int getReward() {
