@@ -38,7 +38,7 @@ public class QLearningTrainDemo {
     private static ArrayList<Double> qpsArray = new ArrayList<Double>();
 
     private static volatile boolean stop = false;
-    private static final int threadCount = 2000;//当前线程数
+    private static final int threadCount = 10;//当前线程数
 
     private static int seconds = 40;//整个程序运行时间
 

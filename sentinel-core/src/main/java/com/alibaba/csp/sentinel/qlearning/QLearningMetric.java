@@ -15,7 +15,7 @@ public class QLearningMetric {
 
     private boolean isQLearning = false;
 
-    final int acceptValue = 10;
+    final int acceptValue = 100;
     final int blockValue = acceptValue; //不相等的话无法判断何时更新Q值，需更改updateInterval和qLearningUpdateManager.isUpdate()
 
     final int[] actionValues = new int[]{0, acceptValue};
@@ -55,7 +55,7 @@ public class QLearningMetric {
     private int rewardValue = 10;
     private int punishValue = -1;
 
-    private int actionInterval = 10;
+    private int actionInterval = 100;
 
 
     private boolean ifCheckCPU;

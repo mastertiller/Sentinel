@@ -26,7 +26,7 @@ public class UserPeakDemo {
     private static volatile boolean stop2 = false;
     private static volatile boolean start2 = false;
     private static volatile boolean flag = false;
-    private static final int threadCount = 500;
+    private static final int threadCount = 6;
     private static int seconds = 60 + 40;
 
     static QLearningMetric qLearningMetric = QLearningMetric.getInstance();
@@ -60,7 +60,7 @@ public class UserPeakDemo {
         }
 
         tick();
-        for (int i = 0; i < 50; i++) {
+        for (int i = 0; i < 3; i++) {
             Thread t = new Thread(new StableTask());
             t.setName("stable-task");
             t.start();
@@ -90,7 +90,7 @@ public class UserPeakDemo {
                     // token acquired, means pass
                     pass.incrementAndGet();
                     try {
-                        TimeUnit.MILLISECONDS.sleep(50);
+                        TimeUnit.MILLISECONDS.sleep(500);
                     } catch (InterruptedException e) {
                         // ignore
                     }
@@ -122,7 +122,7 @@ public class UserPeakDemo {
                     entry = SphU.entry(KEY);
                     pass.addAndGet(1);
                     try {
-                        TimeUnit.MILLISECONDS.sleep(50);
+                        TimeUnit.MILLISECONDS.sleep(2);
                     } catch (InterruptedException e) {
                         // ignore
                     }
@@ -155,7 +155,7 @@ public class UserPeakDemo {
                     entry = SphU.entry(KEY);
                     pass.addAndGet(1);
                     try {
-                        TimeUnit.MILLISECONDS.sleep(50);
+                        TimeUnit.MILLISECONDS.sleep(2);
                     } catch (InterruptedException e) {
                         // ignore
                     }
