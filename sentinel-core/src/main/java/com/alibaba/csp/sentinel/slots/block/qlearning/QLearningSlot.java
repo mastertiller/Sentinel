@@ -18,17 +18,21 @@ public class QLearningSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
             throws Throwable {
 //        System.out.println("Current context: " + context.getName());
 //        System.out.println("Current entry resource: " + context.getCurEntry().getResourceWrapper().getName());
-
-        QLearningUpdateManager qLearningUpdateManager = new QLearningUpdateManager();//管理存储 和 执行 qlearning的方法
-        //检查已经执行了行为后是否得到效用，需要更新Q值
-        qLearningUpdateManager.qLearningUpdate(Constants.ENTRY_NODE.successQps(),Constants.ENTRY_NODE.avgRt(),Constants.ENTRY_NODE.totalQps(),Constants.ENTRY_NODE.curThreadNum());
+        try {
+            QLearningUpdateManager qLearningUpdateManager = new QLearningUpdateManager();//管理存储 和 执行 qlearning的方法
+            //检查已经执行了行为后是否得到效用，需要更新Q值
+            qLearningUpdateManager.qLearningUpdate(Constants.ENTRY_NODE.successQps(),Constants.ENTRY_NODE.avgRt(),Constants.ENTRY_NODE.totalQps(),Constants.ENTRY_NODE.curThreadNum());
 //        System.out.println(" in take action ().");
 //        System.out.println("Current context: " + context.getName());
 
-        qLearningUpdateManager.takeAction(resourceWrapper.getName(),Constants.ENTRY_NODE.totalQps(),Constants.ENTRY_NODE.avgRt(),Constants.ENTRY_NODE.curThreadNum());
+            qLearningUpdateManager.takeAction(resourceWrapper.getName(),Constants.ENTRY_NODE.totalQps(),Constants.ENTRY_NODE.avgRt(),Constants.ENTRY_NODE.curThreadNum());
 
 //        System.out.println("Exiting for entry on QLearningSlot: " + context.getCurEntry().getResourceWrapper().getName());
-        // 注意：要改，因为action初始化为0，必然block前10个请求。
+            // 注意：要改，因为action初始化为0，必然block前10个请求。
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         if(qLearningMetric.isQLearning()){
             if(qLearningMetric.getAction() == 0){
 //            System.out.println("- block - " + qLearningMetric.getActionIntervalCount());
