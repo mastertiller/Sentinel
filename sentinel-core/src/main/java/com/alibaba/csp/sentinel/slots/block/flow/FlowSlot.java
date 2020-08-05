@@ -16,6 +16,7 @@
 package com.alibaba.csp.sentinel.slots.block.flow;
 
 import com.alibaba.csp.sentinel.Constants;
+import com.alibaba.csp.sentinel.QLearningMetric;
 import com.alibaba.csp.sentinel.context.Context;
 import com.alibaba.csp.sentinel.node.DefaultNode;
 import com.alibaba.csp.sentinel.slotchain.AbstractLinkedProcessorSlot;
@@ -24,8 +25,10 @@ import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.alibaba.csp.sentinel.slots.system.SystemRuleManager;
 import com.alibaba.csp.sentinel.spi.SpiOrder;
 import com.alibaba.csp.sentinel.util.AssertUtil;
+import com.alibaba.csp.sentinel.util.TimeUtil;
 import com.alibaba.csp.sentinel.util.function.Function;
 
+import java.sql.Time;
 import java.util.*;
 
 /**
@@ -142,6 +145,7 @@ public class FlowSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
 
     private final FlowRuleChecker checker;
 
+
     public FlowSlot() {
         this(new FlowRuleChecker());
     }
@@ -161,22 +165,33 @@ public class FlowSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
     public void entry(Context context, ResourceWrapper resourceWrapper, DefaultNode node, int count,
                       boolean prioritized, Object... args) throws Throwable {
 
-
-
-        if(node.totalQps() == 1000) {
-            System.out.println("start tick");
-            new Timer().schedule(new TimerTask() {
-
-                @Override
-                public void run() {
-                    System.out.println("bombing!");
-
-                }
-            }, 1000);
+        QLearningMetric qLearningMetric = new QLearningMetric().getInstance();
+        if(checkTimer()) {
+            //执行action
+            System.out.println("bombing! —— " + TimeUtil.currentTimeMillis());
+            qLearningMetric.setCt(TimeUtil.currentTimeMillis());
+            System.out.println("start tick —— " + qLearningMetric.getCt() );
         }
 
         checkFlow(resourceWrapper, context, node, count, prioritized);
         fireEntry(context, resourceWrapper, node, count, prioritized, args);
+    }
+
+    private boolean checkTimer() {
+        QLearningMetric qLearningMetric = new QLearningMetric().getInstance();
+        System.out.println(qLearningMetric.getCt());
+        long ct = qLearningMetric.getCt();
+        long t = TimeUtil.currentTimeMillis();
+
+        if(ct <= 0){
+            qLearningMetric.setCt(TimeUtil.currentTimeMillis());
+            System.out.println("start tick —— " + qLearningMetric.getCt());
+            return false;
+        }
+        if(t-ct >= 100){
+            return true;
+        }
+        return false;
     }
 
     void checkFlow(ResourceWrapper resource, Context context, DefaultNode node, int count, boolean prioritized)
