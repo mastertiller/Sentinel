@@ -1,6 +1,4 @@
-package com.alibaba.csp.sentinel;
-
-import com.alibaba.csp.sentinel.qlearning.demo.QInfo;
+package com.alibaba.csp.sentinel.qlearning;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
