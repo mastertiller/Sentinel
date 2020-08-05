@@ -117,6 +117,13 @@ public class QLearningMetric {
     }
 
 
+    public synchronized boolean isTrain() {
+        if (this.bi <= this.maxTrainNum) {
+            return true;
+        }
+        return false;
+
+    }
 
     private static class QLearningMetricContainer {
         private static QLearningMetric instance = new QLearningMetric();
