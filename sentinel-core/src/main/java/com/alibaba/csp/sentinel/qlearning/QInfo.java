@@ -1,4 +1,4 @@
-package com.alibaba.csp.sentinel.qlearning.demo;
+package com.alibaba.csp.sentinel.qlearning;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
