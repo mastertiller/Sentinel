@@ -7,7 +7,7 @@ public class QLearningLearner {
     QLearningMetric qLearningMetric = new QLearningMetric().getInstance();
     QInfo qInfo;
 
-    public void learn() {
+    public void learn(DefaultNode node) {
         if (checkUpdate()) {
             //执行action
             System.out.println("start tick —— " + qLearningMetric.getCt()
