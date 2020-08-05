@@ -5,6 +5,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class QLearningMetric {
+    ///////////////////////计时与计数器///////////////////
     public long getCt() {
         return ct.get();
     }
@@ -40,7 +41,7 @@ public class QLearningMetric {
 
     private AtomicInteger bi = new AtomicInteger(0);
 
-    /////////////////////////////////////////////////////////
+    /////////////////////////保存QInfo////////////////////////////////
 
     public ConcurrentHashMap<Integer,QInfo > getHm() {
         return hm;
@@ -50,9 +51,13 @@ public class QLearningMetric {
         this.hm.put(i,qInfo);
     }
 
+    public QInfo pushQInfo() {
+        return this.hm.get(this.bi);
+    }
+
     private ConcurrentHashMap<Integer, QInfo> hm = new ConcurrentHashMap<>();
 
-    //////////////////////////////////////////////////////
+    ////////////////////////////action//////////////////////////
 
     public int getAction(){
         return this.action.get();
@@ -63,9 +68,7 @@ public class QLearningMetric {
 
     private AtomicInteger action = new AtomicInteger(1);
 
-    public QInfo pushQInfo() {
-        return this.hm.get(this.bi);
-    }
+    /////////////////////////////方法//////////////////////////////////////
 
 
     private static class QLearningMetricContainer {
