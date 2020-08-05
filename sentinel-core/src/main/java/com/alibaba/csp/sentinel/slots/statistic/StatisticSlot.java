@@ -16,6 +16,8 @@
 package com.alibaba.csp.sentinel.slots.statistic;
 
 import java.util.Collection;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import com.alibaba.csp.sentinel.node.Node;
 import com.alibaba.csp.sentinel.slotchain.ProcessorSlotEntryCallback;
@@ -55,6 +57,8 @@ public class StatisticSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
     public void entry(Context context, ResourceWrapper resourceWrapper, DefaultNode node, int count,
                       boolean prioritized, Object... args) throws Throwable {
         try {
+
+
             // Do some checking.
             fireEntry(context, resourceWrapper, node, count, prioritized, args);
 

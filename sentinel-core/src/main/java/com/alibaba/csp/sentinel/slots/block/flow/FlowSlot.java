@@ -15,18 +15,18 @@
  */
 package com.alibaba.csp.sentinel.slots.block.flow;
 
+import com.alibaba.csp.sentinel.Constants;
 import com.alibaba.csp.sentinel.context.Context;
 import com.alibaba.csp.sentinel.node.DefaultNode;
 import com.alibaba.csp.sentinel.slotchain.AbstractLinkedProcessorSlot;
 import com.alibaba.csp.sentinel.slotchain.ResourceWrapper;
 import com.alibaba.csp.sentinel.slots.block.BlockException;
+import com.alibaba.csp.sentinel.slots.system.SystemRuleManager;
 import com.alibaba.csp.sentinel.spi.SpiOrder;
 import com.alibaba.csp.sentinel.util.AssertUtil;
 import com.alibaba.csp.sentinel.util.function.Function;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * <p>
@@ -160,8 +160,22 @@ public class FlowSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
     @Override
     public void entry(Context context, ResourceWrapper resourceWrapper, DefaultNode node, int count,
                       boolean prioritized, Object... args) throws Throwable {
-        checkFlow(resourceWrapper, context, node, count, prioritized);
 
+
+
+        if(node.totalQps() == 1000) {
+            System.out.println("start tick");
+            new Timer().schedule(new TimerTask() {
+
+                @Override
+                public void run() {
+                    System.out.println("bombing!");
+
+                }
+            }, 1000);
+        }
+
+        checkFlow(resourceWrapper, context, node, count, prioritized);
         fireEntry(context, resourceWrapper, node, count, prioritized, args);
     }
 

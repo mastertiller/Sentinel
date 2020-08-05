@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
  */
 public final class TimeUtil {
 
-    private static volatile long currentTimeMillis;
+    public static volatile long currentTimeMillis;
 
     static {
         currentTimeMillis = System.currentTimeMillis();
