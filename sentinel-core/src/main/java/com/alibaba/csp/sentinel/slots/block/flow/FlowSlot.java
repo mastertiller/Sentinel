@@ -19,9 +19,11 @@ import com.alibaba.csp.sentinel.Constants;
 import com.alibaba.csp.sentinel.QLearningMetric;
 import com.alibaba.csp.sentinel.context.Context;
 import com.alibaba.csp.sentinel.node.DefaultNode;
+import com.alibaba.csp.sentinel.qlearning.demo.QInfo;
 import com.alibaba.csp.sentinel.slotchain.AbstractLinkedProcessorSlot;
 import com.alibaba.csp.sentinel.slotchain.ResourceWrapper;
 import com.alibaba.csp.sentinel.slots.block.BlockException;
+import com.alibaba.csp.sentinel.slots.system.SystemBlockException;
 import com.alibaba.csp.sentinel.slots.system.SystemRuleManager;
 import com.alibaba.csp.sentinel.spi.SpiOrder;
 import com.alibaba.csp.sentinel.util.AssertUtil;
@@ -144,7 +146,9 @@ import java.util.*;
 public class FlowSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
 
     private final FlowRuleChecker checker;
-
+    QLearningMetric qLearningMetric = new QLearningMetric().getInstance();
+    QInfo qInfo;
+    private final int batchNum = 1000;
 
     public FlowSlot() {
         this(new FlowRuleChecker());
@@ -165,30 +169,118 @@ public class FlowSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
     public void entry(Context context, ResourceWrapper resourceWrapper, DefaultNode node, int count,
                       boolean prioritized, Object... args) throws Throwable {
 
-        QLearningMetric qLearningMetric = new QLearningMetric().getInstance();
-        if(checkTimer()) {
-            //执行action
-            System.out.println("bombing! —— " + TimeUtil.currentTimeMillis());
-            qLearningMetric.setCt(TimeUtil.currentTimeMillis());
-            System.out.println("start tick —— " + qLearningMetric.getCt() );
+        try {
+
+            if (checkUpdate()) {
+                //执行action
+                System.out.println("start tick —— " + qLearningMetric.getCt()
+                        + "    start count —— " + qLearningMetric.getCn());
+                if(containsQInfo()){
+                    //取，
+                    //更新
+                    UpdateQ();
+                    System.out.println("取走： " + qLearningMetric.getBi() + "    " + qLearningMetric.getAction());
+                }
+                //开始下一批决策
+                qLearningMetric.addBi();
+                //决策
+                qInfo = takeAction(node);
+                //存
+                qLearningMetric.putHm(qLearningMetric.getBi(),qInfo);
+                System.out.println("存下： " + qLearningMetric.getBi() + "   " + qLearningMetric.getAction());
+            }
+
+        }
+        catch(Exception e){
+            e.printStackTrace();
+        }
+        if(qLearningMetric.getAction() == 0){
+            throw new SystemBlockException(resourceWrapper.getName(), "q-learning");
         }
 
         checkFlow(resourceWrapper, context, node, count, prioritized);
         fireEntry(context, resourceWrapper, node, count, prioritized, args);
     }
 
-    private boolean checkTimer() {
-        QLearningMetric qLearningMetric = new QLearningMetric().getInstance();
-        System.out.println(qLearningMetric.getCt());
+    private synchronized QInfo takeAction(DefaultNode node) {
+
+//        String s = locateState(node);
+//        if(train){
+//            //随机选择
+//            a =
+//        }
+//        else{
+//            //从qtable中选择
+//            a =
+//        }
+//        qLearningMetric.setAction(a);
+//        double u = calculateUtility(node);
+        String s = "x";
+        int a = (qLearningMetric.getBi()) % 2;
+        double u = 2.2;
+
+        if(a > 1 || a < 0){
+            System.out.println("--------------------- error in a ");
+        }
+        qLearningMetric.setAction(a);
+        QInfo qInfo = new QInfo();
+        qInfo.setQInfo(s,a,u);
+
+        return qInfo;
+    }
+
+    private void UpdateQ() {
+
+        qInfo = qLearningMetric.pushQInfo();
+        String s = qInfo.getState();
+        int a = qInfo.getAction();
+        double u = qInfo.getUtility();
+        double nextUtility = qLearningMetric.calculateUtility(cpu,rt,...);
+        int r = qLearningMetric.getReward(u,nextUtility);
+        double q = qLearningMetric.getQValue(s,a);
+        double maxQ = qLearningMetric.getMaxQ();
+        double qUpdated = qLearningMetric.qUpdate(q,r,maxQ);
+        qLearningMetric.setQValue(s,a,qUpdated);
+    }
+
+    private boolean containsQInfo() {
+        int bi = qLearningMetric.getBi();
+
+        if(bi == 0) {
+            return false;
+        }
+
+        if(qLearningMetric.getHm().containsKey(bi)){
+//            System.out.println("存进去了" + bi);
+            return true;
+        }
+        else{
+            //测试
+            System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+        }
+        return false;
+    }
+
+    private synchronized boolean checkUpdate() {
+//        System.out.println(qLearningMetric.getCt());
         long ct = qLearningMetric.getCt();
         long t = TimeUtil.currentTimeMillis();
 
+        qLearningMetric.addCn();
+
         if(ct <= 0){
             qLearningMetric.setCt(TimeUtil.currentTimeMillis());
-            System.out.println("start tick —— " + qLearningMetric.getCt());
-            return false;
+//            System.out.println("start tick —— " + qLearningMetric.getCt()
+//            + "    start count —— " + qLearningMetric.getCn());
+            return true;
         }
-        if(t-ct >= 100){
+        if(t-ct >= 20 || qLearningMetric.getCn() >= 200){
+
+            System.out.println("bombing! —— " + (t-ct)
+            + "    total count —— " + qLearningMetric.getCn());
+//            System.out.println(" ____________________________________________");
+            qLearningMetric.setCt(TimeUtil.currentTimeMillis());
+            qLearningMetric.resetCn();
             return true;
         }
         return false;
