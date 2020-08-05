@@ -152,7 +152,7 @@ public class FlowQpsDemo {
 
                 Random random2 = new Random();
                 try {
-                    TimeUnit.MILLISECONDS.sleep(random2.nextInt(50));
+                    TimeUnit.MILLISECONDS.sleep(random2.nextInt(5));
                 } catch (InterruptedException e) {
                     // ignore
                 }
