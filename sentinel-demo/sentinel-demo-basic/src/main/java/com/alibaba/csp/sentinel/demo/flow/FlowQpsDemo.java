@@ -59,15 +59,15 @@ public class FlowQpsDemo {
     }
 
     private static void initFlowQpsRule() {
-        List<FlowRule> rules = new ArrayList<FlowRule>();
-        FlowRule rule1 = new FlowRule();
-        rule1.setResource(KEY);
-        // set limit qps to 20
-        rule1.setCount(20);
-        rule1.setGrade(RuleConstant.FLOW_GRADE_QPS);
-        rule1.setLimitApp("default");
-        rules.add(rule1);
-        FlowRuleManager.loadRules(rules);
+//        List<FlowRule> rules = new ArrayList<FlowRule>();
+//        FlowRule rule1 = new FlowRule();
+//        rule1.setResource(KEY);
+//        // set limit qps to 20
+//        rule1.setCount(20);
+//        rule1.setGrade(RuleConstant.FLOW_GRADE_QPS);
+//        rule1.setLimitApp("default");
+//        rules.add(rule1);
+//        FlowRuleManager.loadRules(rules);
     }
 
     private static void simulateTraffic() {
