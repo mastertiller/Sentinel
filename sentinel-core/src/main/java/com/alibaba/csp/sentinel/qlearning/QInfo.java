@@ -4,7 +4,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class QInfo {
     public String getState() {
-        return state;
+        return this.state;
     }
 
     public void setState(String state) {
@@ -31,7 +31,7 @@ public class QInfo {
     AtomicInteger action = new AtomicInteger(0);
     volatile double utility;
 
-    public void setQInfo(String state, int action,double utility){
+    public synchronized void setQInfo(String state, int action,double utility){
         this.state = state;
         this.action.set(action);
         this.utility = utility;

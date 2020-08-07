@@ -12,15 +12,14 @@ import com.alibaba.csp.sentinel.slots.system.SystemBlockException;
 import sun.plugin.dom.html.HTMLFormElement;
 
 public class QLearningSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
-    private final QLearningLearner qLearningLearner = new QLearningLearner();
-
-    private final int batchNum = 1000;
+    private QLearningLearner qLearningLearner = new QLearningLearner();
+    private QLearningMetric qLearningMetric = new QLearningMetric().getInstance();
 
     @Override
     public void entry(Context context, ResourceWrapper resourceWrapper, DefaultNode node, int count, boolean prioritized, Object... args)
             throws Throwable {
         try{
-            qLearningLearner.learn();
+            qLearningLearner.learn(node);
         }
         catch(Exception e){
             e.printStackTrace();
