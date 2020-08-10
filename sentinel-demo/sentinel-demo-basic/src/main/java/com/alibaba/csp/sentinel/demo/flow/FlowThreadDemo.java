@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.alibaba.csp.sentinel.Constants;
 import com.alibaba.csp.sentinel.util.TimeUtil;
 import com.alibaba.csp.sentinel.Entry;
 import com.alibaba.csp.sentinel.SphU;
@@ -85,16 +86,16 @@ public class FlowThreadDemo {
     }
 
     private static void initFlowRule() {
-        List<FlowRule> rules = new ArrayList<FlowRule>();
-        FlowRule rule1 = new FlowRule();
-        rule1.setResource("methodA");
-        // set limit concurrent thread for 'methodA' to 20
-        rule1.setCount(20);
-        rule1.setGrade(RuleConstant.FLOW_GRADE_THREAD);
-        rule1.setLimitApp("default");
-
-        rules.add(rule1);
-        FlowRuleManager.loadRules(rules);
+//        List<FlowRule> rules = new ArrayList<FlowRule>();
+//        FlowRule rule1 = new FlowRule();
+//        rule1.setResource("methodA");
+//        // set limit concurrent thread for 'methodA' to 20
+//        rule1.setCount(20);
+//        rule1.setGrade(RuleConstant.FLOW_GRADE_THREAD);
+//        rule1.setLimitApp("default");
+//
+//        rules.add(rule1);
+//        FlowRuleManager.loadRules(rules);
     }
 
     private static void tick() {
@@ -135,7 +136,7 @@ public class FlowThreadDemo {
                 System.out.println(TimeUtil.currentTimeMillis() + ", total:" + oneSecondTotal
                     + ", pass:" + oneSecondPass
                     + ", block:" + oneSecondBlock
-                    + " activeThread:" + activeThread.get());
+                    + " activeThread:" + activeThread.get() + " actual thread: " + Constants.ENTRY_NODE.passQps());
                 if (seconds-- <= 0) {
                     stop = true;
                 }

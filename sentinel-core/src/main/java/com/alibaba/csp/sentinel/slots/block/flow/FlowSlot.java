@@ -168,7 +168,10 @@ public class FlowSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
 
         try {
 
-            qLearningLearner.learn(node);
+//            System.out.println(node.getClusterNode().curThreadNum());
+//            System.out.println("node: " + node.curThreadNum());
+
+//            qLearningLearner.learn(node);
 
 //            if (checkUpdate()) {
 //                //执行action
@@ -193,9 +196,9 @@ public class FlowSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
         catch(Exception e){
             e.printStackTrace();
         }
-        if(qLearningMetric.getAction() == 0){
-            throw new SystemBlockException(resourceWrapper.getName(), "q-learning");
-        }
+//        if(qLearningMetric.getAction() == 0){
+//            throw new SystemBlockException(resourceWrapper.getName(), "q-learning");
+//        }
 
         checkFlow(resourceWrapper, context, node, count, prioritized);
         fireEntry(context, resourceWrapper, node, count, prioritized, args);
