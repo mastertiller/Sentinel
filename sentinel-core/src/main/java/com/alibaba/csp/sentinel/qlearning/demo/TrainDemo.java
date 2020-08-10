@@ -1,89 +1,50 @@
-/*
- * Copyright 1999-2018 Alibaba Group Holding Ltd.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-package com.alibaba.csp.sentinel.demo.flow;
+package com.alibaba.csp.sentinel.qlearning.demo;
+
+import com.alibaba.csp.sentinel.Entry;
+import com.alibaba.csp.sentinel.EntryType;
+import com.alibaba.csp.sentinel.SphU;
+import com.alibaba.csp.sentinel.slots.block.BlockException;
+import com.alibaba.csp.sentinel.slots.system.SystemRule;
+import com.alibaba.csp.sentinel.slots.system.SystemRuleManager;
+import com.alibaba.csp.sentinel.util.TimeUtil;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.alibaba.csp.sentinel.util.TimeUtil;
-import com.alibaba.csp.sentinel.Entry;
-import com.alibaba.csp.sentinel.SphU;
-import com.alibaba.csp.sentinel.slots.block.BlockException;
-import com.alibaba.csp.sentinel.slots.block.RuleConstant;
-import com.alibaba.csp.sentinel.slots.block.flow.FlowRule;
-import com.alibaba.csp.sentinel.slots.block.flow.FlowRuleManager;
 
-/**
- * @author jialiang.linjl
- */
-public class FlowQpsDemo {
-
-    private static final String KEY = "method";
+public class TrainDemo {
 
     private static AtomicInteger pass = new AtomicInteger();
     private static AtomicInteger block = new AtomicInteger();
     private static AtomicInteger total = new AtomicInteger();
 
     private static volatile boolean stop = false;
-
     private static final int threadCount = 32;
 
     private static int seconds = 60 + 40;
 
     public static void main(String[] args) throws Exception {
-        initFlowQpsRule();
 
         tick();
-        // first make the system run on a very low condition
-        simulateTraffic();
+        initSystemRule();
 
-        System.out.println("===== begin to do flow control");
-        System.out.println("only 20 requests per second can pass");
-
-    }
-
-    private static void initFlowQpsRule() {
-        List<FlowRule> rules = new ArrayList<FlowRule>();
-        FlowRule rule1 = new FlowRule();
-        rule1.setResource(KEY);
-        // set limit qps to 20
-        rule1.setCount(20);
-        rule1.setGrade(RuleConstant.FLOW_GRADE_QPS);
-        rule1.setLimitApp("default");
-        rules.add(rule1);
-        FlowRuleManager.loadRules(rules);
-    }
-
-    private static void simulateTraffic() {
         for (int i = 0; i < threadCount; i++) {
-            Thread t = new Thread(new Runnable() {
+            Thread entryThread = new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    while (!stop) {
+                    while (true) {
                         Entry entry = null;
-
                         try {
-                            entry = SphU.entry(KEY);
-                            // token acquired, means pass
-                            pass.addAndGet(1);
+                            entry = SphU.entry("methodA", EntryType.IN);
+                            pass.incrementAndGet();
+
                         } catch (BlockException e1) {
                             block.incrementAndGet();
+
                         } catch (Exception e2) {
                             // biz exception
                         } finally {
@@ -102,10 +63,29 @@ public class FlowQpsDemo {
                         }
                     }
                 }
+
             });
-            t.setName("simulate-traffic-Task");
-            t.start();
+            entryThread.setName("working-thread");
+            entryThread.start();
         }
+    }
+
+    private static void initSystemRule() {
+//        List<SystemRule> rules = new ArrayList<SystemRule>();
+//        SystemRule rule = new SystemRule();
+//        // max load is 3
+//        rule.setHighestSystemLoad(3.0);
+//        // max cpu usage is 60%
+//        rule.setHighestCpuUsage(0.6);
+//        // max avg rt of all request is 10 ms
+//        rule.setAvgRt(10);
+//        // max total qps is 20
+//        rule.setQps(20);
+//        // max parallel working thread is 10
+//        rule.setMaxThread(10);
+//
+//        rules.add(rule);
+//        SystemRuleManager.loadRules(Collections.singletonList(rule));
     }
 
     private static void tick() {
@@ -115,12 +95,9 @@ public class FlowQpsDemo {
     }
 
     static class TimerTask implements Runnable {
-
         @Override
         public void run() {
-            long start = System.currentTimeMillis();
             System.out.println("begin to statistic!!!");
-
             long oldTotal = 0;
             long oldPass = 0;
             long oldBlock = 0;
@@ -141,23 +118,15 @@ public class FlowQpsDemo {
                 long oneSecondBlock = globalBlock - oldBlock;
                 oldBlock = globalBlock;
 
-                System.out.println(seconds + " send qps is: " + oneSecondTotal);
-                System.out.println(TimeUtil.currentTimeMillis() + ", total:" + oneSecondTotal
-                    + ", pass:" + oneSecondPass
-                    + ", block:" + oneSecondBlock);
-
+                System.out.println(seconds + ", " + TimeUtil.currentTimeMillis() + ", total:"
+                        + oneSecondTotal + ", pass:"
+                        + oneSecondPass + ", block:" + oneSecondBlock);
                 if (seconds-- <= 0) {
                     stop = true;
                 }
             }
-
-            long cost = System.currentTimeMillis() - start;
-            System.out.println("time cost: " + cost + " ms");
-            System.out.println("total:" + total.get() + ", pass:" + pass.get()
-                + ", block:" + block.get());
             System.exit(0);
         }
     }
-
-
 }
+
