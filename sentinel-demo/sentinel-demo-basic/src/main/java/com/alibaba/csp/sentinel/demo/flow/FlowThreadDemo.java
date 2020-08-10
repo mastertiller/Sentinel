@@ -46,8 +46,8 @@ public class FlowThreadDemo {
 
     public static void main(String[] args) throws Exception {
         System.out.println(
-                "MethodA will call methodB. After running for a while, methodB becomes fast, "
-                        + "which make methodA also become fast ");
+            "MethodA will call methodB. After running for a while, methodB becomes fast, "
+                + "which make methodA also become fast ");
         tick();
         initFlowRule();
 
@@ -133,9 +133,9 @@ public class FlowThreadDemo {
 
                 System.out.println(seconds + " total qps is: " + oneSecondTotal);
                 System.out.println(TimeUtil.currentTimeMillis() + ", total:" + oneSecondTotal
-                        + ", pass:" + oneSecondPass
-                        + ", block:" + oneSecondBlock
-                        + " activeThread:" + activeThread.get());
+                    + ", pass:" + oneSecondPass
+                    + ", block:" + oneSecondBlock
+                    + " activeThread:" + activeThread.get());
                 if (seconds-- <= 0) {
                     stop = true;
                 }
@@ -148,7 +148,7 @@ public class FlowThreadDemo {
             long cost = System.currentTimeMillis() - start;
             System.out.println("time cost: " + cost + " ms");
             System.out.println("total:" + total.get() + ", pass:" + pass.get()
-                    + ", block:" + block.get());
+                + ", block:" + block.get());
             System.exit(0);
         }
     }
