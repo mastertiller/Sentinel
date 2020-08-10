@@ -1,25 +1,16 @@
-/*
- * Copyright 1999-2018 Alibaba Group Holding Ltd.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-package com.alibaba.csp.sentinel.demo.flow;
+package com.alibaba.csp.sentinel.qlearning.demo;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.alibaba.csp.sentinel.Constants;
+import com.alibaba.csp.sentinel.EntryType;
+import com.alibaba.csp.sentinel.qlearning.QLearningMetric;
+import com.alibaba.csp.sentinel.qlearning.qtable.QTable;
 import com.alibaba.csp.sentinel.util.TimeUtil;
 import com.alibaba.csp.sentinel.Entry;
 import com.alibaba.csp.sentinel.SphU;
@@ -28,28 +19,51 @@ import com.alibaba.csp.sentinel.slots.block.RuleConstant;
 import com.alibaba.csp.sentinel.slots.block.flow.FlowRule;
 import com.alibaba.csp.sentinel.slots.block.flow.FlowRuleManager;
 
-/**
- * @author jialiang.linjl
- */
-public class FlowThreadDemo {
+public class SlowCallDemo {
+
+    private static final String KEY = "abc";
 
     private static AtomicInteger pass = new AtomicInteger();
     private static AtomicInteger block = new AtomicInteger();
     private static AtomicInteger total = new AtomicInteger();
     private static AtomicInteger activeThread = new AtomicInteger();
 
+    private static ArrayList<Double> avgRTArray = new ArrayList<Double>();
+    private static ArrayList<Double> qpsArray = new ArrayList<Double>();
+
     private static volatile boolean stop = false;
     private static final int threadCount = 100;
 
-    private static int seconds = 60 + 40;
-    private static volatile int methodBRunningTime = 2000;
+    private static int seconds = 20 + 60;
+    private static volatile int methodBRunningTime = 1000;
+
+    static QLearningMetric qLearningMetric = QLearningMetric.getInstance();
+
+    static QTable qTableTrain = new QTable();
+
+    private static boolean isQLearning = false;
+    //如果考虑CPU这个state，为true
+    private static boolean ifCheckCPU = false;
+
+    private static String qTablePath = "sentinel-core/src/main/java/com/alibaba/csp/sentinel/qlearning/demo/" + SlowCallDemo.class.getSimpleName() + "-QTable.txt";
+
+    //set a switch， when it is true it will employ Qlearnig algorithm. If not it will use BBR algorithm.
 
     public static void main(String[] args) throws Exception {
+
+        QLearningMetric qLearningMetric = QLearningMetric.getInstance();
+        qLearningMetric.setLearning(isQLearning);
+        qLearningMetric.setIfCheckCPU(ifCheckCPU);
+
+        //是否更新
+        qLearningMetric.setQtable(qTableTrain.read(qTablePath));
+
         System.out.println(
                 "MethodA will call methodB. After running for a while, methodB becomes fast, "
                         + "which make methodA also become fast ");
+
         tick();
-        initFlowRule();
+        initFlowThreadRule();
 
         for (int i = 0; i < threadCount; i++) {
             Thread entryThread = new Thread(new Runnable() {
@@ -58,8 +72,8 @@ public class FlowThreadDemo {
                     while (true) {
                         Entry methodA = null;
                         try {
-                            TimeUnit.MILLISECONDS.sleep(5);
-                            methodA = SphU.entry("methodA");
+                            TimeUnit.MILLISECONDS.sleep(10);
+                            methodA = SphU.entry("methodA",EntryType.IN);
                             activeThread.incrementAndGet();
                             Entry methodB = SphU.entry("methodB");
                             TimeUnit.MILLISECONDS.sleep(methodBRunningTime);
@@ -82,19 +96,31 @@ public class FlowThreadDemo {
             entryThread.setName("working thread");
             entryThread.start();
         }
+
+        System.out.println("===== begin to do flow control");
+        System.out.println("only 20 requests per second can pass");
+
     }
 
-    private static void initFlowRule() {
-        List<FlowRule> rules = new ArrayList<FlowRule>();
-        FlowRule rule1 = new FlowRule();
-        rule1.setResource("methodA");
-        // set limit concurrent thread for 'methodA' to 20
-        rule1.setCount(20);
-        rule1.setGrade(RuleConstant.FLOW_GRADE_THREAD);
-        rule1.setLimitApp("default");
-
-        rules.add(rule1);
-        FlowRuleManager.loadRules(rules);
+    private static void initFlowThreadRule() {
+//        List<FlowRule> rules = new ArrayList<FlowRule>();
+//
+//        FlowRule rule1 = new FlowRule();
+//        rule1.setResource(KEY);
+//        // set limit qps to 20
+//        rule1.setCount(1200);
+//        rule1.setGrade(RuleConstant.FLOW_GRADE_QPS);
+//        rule1.setLimitApp("default");
+//        rules.add(rule1);
+//        FlowRule rule2 = new FlowRule();
+//        rule2.setResource(KEY);
+//        // set limit qps to 20
+//        rule2.setCount(3000);
+//        rule2.setGrade(RuleConstant.FLOW_GRADE_QPS);
+//        rule2.setLimitApp("default");
+//        rules.add(rule2);
+//        qLearningMetric.setRules(rules);
+//        FlowRuleManager.loadRules(rules);
     }
 
     private static void tick() {
@@ -103,7 +129,7 @@ public class FlowThreadDemo {
         timer.start();
     }
 
-    static class TimerTask implements Runnable {
+    public static class TimerTask implements Runnable {
 
         @Override
         public void run() {
@@ -113,12 +139,12 @@ public class FlowThreadDemo {
             long oldTotal = 0;
             long oldPass = 0;
             long oldBlock = 0;
-
             while (!stop) {
                 try {
                     TimeUnit.SECONDS.sleep(1);
                 } catch (InterruptedException e) {
                 }
+
                 long globalTotal = total.get();
                 long oneSecondTotal = globalTotal - oldTotal;
                 oldTotal = globalTotal;
@@ -131,17 +157,31 @@ public class FlowThreadDemo {
                 long oneSecondBlock = globalBlock - oldBlock;
                 oldBlock = globalBlock;
 
+                double avgRt = Constants.ENTRY_NODE.avgRt();
+                double successQps = Constants.ENTRY_NODE.successQps();
+
                 System.out.println(seconds + " total qps is: " + oneSecondTotal);
-                System.out.println(TimeUtil.currentTimeMillis() + ", total:" + oneSecondTotal
+                System.out.print(TimeUtil.currentTimeMillis() + ", total:" + oneSecondTotal
                         + ", pass:" + oneSecondPass
                         + ", block:" + oneSecondBlock
                         + " activeThread:" + activeThread.get());
+
+                System.out.print(" TEST ----- " + successQps);
+                avgRTArray.add(avgRt);
+                qpsArray.add(successQps);
+
+                if (qLearningMetric.isTrain()) {
+                    System.out.println(" ------now is training------ ");
+                } else {
+                    System.out.println();
+                }
+
                 if (seconds-- <= 0) {
                     stop = true;
                 }
-                if (seconds == 40) {
+                if (seconds == 20) {
                     System.out.println("method B is running much faster; more requests are allowed to pass");
-                    methodBRunningTime = 20;
+                    methodBRunningTime = 10;
                 }
             }
 
@@ -149,7 +189,30 @@ public class FlowThreadDemo {
             System.out.println("time cost: " + cost + " ms");
             System.out.println("total:" + total.get() + ", pass:" + pass.get()
                     + ", block:" + block.get());
+
+
+//            printArray(avgRTArray, "Average RT");
+//            printArray(qpsArray, "Success QPS");
+//            if (qLearningMetric.isQLearning()){
+//                System.out.println(" new state number: " + qLearningMetric.getNewStateCount() + "   old state number: " + qLearningMetric.getOldStateCount());
+            qLearningMetric.showPolicy();
+            ConcurrentHashMap<String, double[]> qtable = qLearningMetric.getQtable();
+            QTable qTableTrain = new QTable();
+            qTableTrain.save(qtable,qTablePath);
+//            }
             System.exit(0);
         }
     }
+    private static void printArray(List<Double> array, String name) {
+        System.out.println(name + " result:");
+        System.out.print("[");
+        for (double val : array) {
+            System.out.print(val + ", ");
+        }
+        System.out.print("]");
+        System.out.println();
+    }
+
 }
+
+
