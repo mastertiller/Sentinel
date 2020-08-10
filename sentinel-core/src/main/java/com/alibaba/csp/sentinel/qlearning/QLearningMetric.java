@@ -1,5 +1,6 @@
 package com.alibaba.csp.sentinel.qlearning;
 
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -10,10 +11,13 @@ public class QLearningMetric {
      * 注意：原子类变量不能直接用！如this.bi，应该用getBi()！
      */
     ///////////////////////需要检查是否上锁的变量/////////////////////////
-    public boolean ifCheckCPU;
-    public final int maxTrainNum = 5000000;
+    public boolean ifCheckCPU = true;
+    public final int maxTrainNum = 50000000;
+
+    public boolean isLearning;
 
     final int[] actionValues = new int[]{0, 1};
+    String[] actionNames = new String[]{"Block", "Accept"};
     private volatile int actionsCount = actionValues.length;
 
     private volatile ConcurrentHashMap<String, double[]> Qtable = new ConcurrentHashMap<>();
@@ -33,6 +37,7 @@ public class QLearningMetric {
     private final int QpsInterval = 200;
     private final int RtInterval = 10;
     private final int ThreadInterval = 2;
+    private int statesCount;
 
 
     ///////////////////////计时与计数器///////////////////
@@ -78,7 +83,6 @@ public class QLearningMetric {
     }
 
     public void putHm(int i,QInfo qInfo) {
-        System.out.println("存下： " + i + "   " + qInfo.getState() + "   " + qInfo.getAction() + "   " + qInfo.getUtility() );
         this.hm.put(i,qInfo);
     }
 
@@ -154,9 +158,9 @@ public class QLearningMetric {
 
     public int getReward(double u,double nextU) {
         double UtilityIncrease = nextU - u;
-        if ( UtilityIncrease> tolerance) {
+        if ( UtilityIncrease >= tolerance) {
             return rewardValue;
-        } else if (UtilityIncrease < -1 * tolerance) {
+        } else if (UtilityIncrease <= -1 * tolerance) {
             return punishValue;
         } else {
             return 0;
@@ -214,12 +218,25 @@ public class QLearningMetric {
         return policyGotoAction;
     }
 
+    public synchronized void showPolicy() {
+        String fromState;
+        int toAction;
+        statesCount = Qtable.size();
+        System.out.println("\n ======= Show Policy =======" + statesCount);
+
+        for (Map.Entry entry : Qtable.entrySet()) {
+            fromState = (String) entry.getKey();
+            toAction = policy(fromState);
+            System.out.println("Current State: " + fromState + "       Action: " + actionNames[toAction] + "        Q Value: " + this.Qtable.get(fromState)[toAction]);
+        }
+    }
+
     public synchronized int getRandomAction() {
         return new Random().nextInt(actionsCount);
     }
 
     public synchronized boolean isTrain() {
-        if (this.getBi() <= this.maxTrainNum) {
+        if (this.isLearning && this.getBi() <= this.maxTrainNum) {
             return true;
         }
         return false;
@@ -227,6 +244,22 @@ public class QLearningMetric {
 
     public double updateQ(double q, int r, double maxQ) {
         return q + delta * (r + gamma * maxQ - q);
+    }
+
+    public void setIfCheckCPU(boolean ifCheckCPU) {
+        this.ifCheckCPU = ifCheckCPU;
+    }
+
+    public void setLearning(boolean learning) {
+        this.isLearning = learning;
+    }
+
+    public void setQtable(ConcurrentHashMap<String, double[]> qtable) {
+        Qtable = qtable;
+    }
+
+    public ConcurrentHashMap<String, double[]> getQtable() {
+        return Qtable;
     }
 
     private static class QLearningMetricContainer {

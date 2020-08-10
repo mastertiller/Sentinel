@@ -18,16 +18,8 @@ public class QLearningSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
     @Override
     public void entry(Context context, ResourceWrapper resourceWrapper, DefaultNode node, int count, boolean prioritized, Object... args)
             throws Throwable {
-        try{
-            qLearningLearner.learn(node);
-        }
-        catch(Exception e){
-            e.printStackTrace();
-        }
+        qLearningLearner.learn(resourceWrapper,node);
 
-        if(qLearningMetric.getAction() == 0){
-            throw new SystemBlockException(resourceWrapper.getName(), "q-learning");
-        }
         fireEntry(context, resourceWrapper, node, count, prioritized, args);
     }
 
