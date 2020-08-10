@@ -33,7 +33,7 @@ public class QLearningLearner {
             int bi = qLearningMetric.addBi();
             //决策
             QInfo qInfo = takeAction(node);
-            System.out.println("      状态: " + qInfo.getState() + "      决策: " + qInfo.getAction() );
+//            System.out.println("      状态: " + qInfo.getState() + "      决策: " + qInfo.getAction() );
 //        System.out.println(i + " 存下："  + "      状态: " + qInfo.getState() + "      决策: " + qInfo.getAction() );
             //存
             qLearningMetric.putHm(bi,qInfo);
@@ -58,8 +58,8 @@ public class QLearningLearner {
         }
         if(t-ct >= batchTime || qLearningMetric.getCn() >= bacthNum){
 
-            System.out.println("!bombing!     total time —— " + (t-ct)
-                    + "    total count —— " + qLearningMetric.getCn());
+//            System.out.println("!bombing!     total time —— " + (t-ct)
+//                    + "    total count —— " + qLearningMetric.getCn());
 
             qLearningMetric.setCt(TimeUtil.currentTimeMillis());
             qLearningMetric.resetCn();
@@ -125,7 +125,7 @@ public class QLearningLearner {
 
         double u = qLearningMetric.calculateUtility(node.successQps(),node.avgRt());
 
-        System.out.println( qLearningMetric.getBi() + " batch BEGIN " + " --------- CPU usage: " + SystemRuleManager.getCurrentCpuUsage() +  "    ======== successQPS: " + node.successQps() + "    ======== RT: "  + node.avgRt() + "     ======= Utility : " + u);
+//        System.out.println( qLearningMetric.getBi() + " batch BEGIN " + " --------- CPU usage: " + SystemRuleManager.getCurrentCpuUsage() +  "    ======== successQPS: " + node.successQps() + "    ======== RT: "  + node.avgRt() + "     ======= Utility : " + u);
 
 //        System.out.println( qLearningMetric.getBi() + " batch BEGIN " + " --------- ThreadNum: " + Constants.ENTRY_NODE.curThreadNum() +  "    ======== successQPS: " + node.successQps() + "    ======== RT: "  + node.avgRt() + "     ======= Utility : " + u);
 

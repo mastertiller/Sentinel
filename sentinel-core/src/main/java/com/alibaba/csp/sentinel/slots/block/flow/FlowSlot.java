@@ -15,21 +15,18 @@
  */
 package com.alibaba.csp.sentinel.slots.block.flow;
 
-import com.alibaba.csp.sentinel.qlearning.QLearningLearner;
-import com.alibaba.csp.sentinel.qlearning.QLearningMetric;
 import com.alibaba.csp.sentinel.context.Context;
 import com.alibaba.csp.sentinel.node.DefaultNode;
-import com.alibaba.csp.sentinel.qlearning.QInfo;
 import com.alibaba.csp.sentinel.slotchain.AbstractLinkedProcessorSlot;
 import com.alibaba.csp.sentinel.slotchain.ResourceWrapper;
 import com.alibaba.csp.sentinel.slots.block.BlockException;
-import com.alibaba.csp.sentinel.slots.system.SystemBlockException;
 import com.alibaba.csp.sentinel.spi.SpiOrder;
 import com.alibaba.csp.sentinel.util.AssertUtil;
-import com.alibaba.csp.sentinel.util.TimeUtil;
 import com.alibaba.csp.sentinel.util.function.Function;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 /**
  * <p>
@@ -144,8 +141,6 @@ import java.util.*;
 public class FlowSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
 
     private final FlowRuleChecker checker;
-    private QLearningLearner qLearningLearner = new QLearningLearner();
-    QLearningMetric qLearningMetric = new QLearningMetric().getInstance();
 
     public FlowSlot() {
         this(new FlowRuleChecker());
@@ -165,127 +160,9 @@ public class FlowSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
     @Override
     public void entry(Context context, ResourceWrapper resourceWrapper, DefaultNode node, int count,
                       boolean prioritized, Object... args) throws Throwable {
-
-        try {
-
-//            System.out.println(node.getClusterNode().curThreadNum());
-//            System.out.println("node: " + node.curThreadNum());
-
-//            qLearningLearner.learn(node);
-
-//            if (checkUpdate()) {
-//                //执行action
-//                System.out.println("start tick —— " + qLearningMetric.getCt()
-//                        + "    start count —— " + qLearningMetric.getCn());
-//                if(containsQInfo()){
-//                    //取，
-//                    //更新
-////                    UpdateQ();
-//                    System.out.println("取走： " + qLearningMetric.getBi() + "    " + qLearningMetric.getAction());
-//                }
-//                //开始下一批决策
-//                qLearningMetric.addBi();
-//                //决策
-//                qInfo = takeAction(node);
-//                //存
-//                qLearningMetric.putHm(qLearningMetric.getBi(),qInfo);
-//                System.out.println("存下： " + qLearningMetric.getBi() + "   " + qLearningMetric.getAction());
-//            }
-
-        }
-        catch(Exception e){
-            e.printStackTrace();
-        }
-//        if(qLearningMetric.getAction() == 0){
-//            throw new SystemBlockException(resourceWrapper.getName(), "q-learning");
-//        }
-
         checkFlow(resourceWrapper, context, node, count, prioritized);
+
         fireEntry(context, resourceWrapper, node, count, prioritized, args);
-    }
-
-    private synchronized QInfo takeAction(DefaultNode node) {
-
-//        String s = locateState(node);
-//        if(train){
-//            //随机选择
-//            a =
-//        }
-//        else{
-//            //从qtable中选择
-//            a =
-//        }
-//        qLearningMetric.setAction(a);
-//        double u = calculateUtility(node);
-        String s = "x";
-        int a = (qLearningMetric.getBi()) % 2;
-        double u = 2.2;
-
-        if(a > 1 || a < 0){
-            System.out.println("--------------------- error in a ");
-        }
-        qLearningMetric.setAction(a);
-        QInfo qInfo = new QInfo();
-        qInfo.setQInfo(s,a,u);
-
-        return qInfo;
-    }
-
-//    private void UpdateQ() {
-//
-//        qInfo = qLearningMetric.pushQInfo();
-//        String s = qInfo.getState();
-//        int a = qInfo.getAction();
-//        double u = qInfo.getUtility();
-//        double nextUtility = qLearningMetric.calculateUtility(cpu,rt,...);
-//        int r = qLearningMetric.getReward(u,nextUtility);
-//        double q = qLearningMetric.getQValue(s,a);
-//        double maxQ = qLearningMetric.getMaxQ();
-//        double qUpdated = qLearningMetric.qUpdate(q,r,maxQ);
-//        qLearningMetric.setQValue(s,a,qUpdated);
-//    }
-
-    private boolean containsQInfo() {
-        int bi = qLearningMetric.getBi();
-
-        if(bi == 0) {
-            return false;
-        }
-
-        if(qLearningMetric.getHm().containsKey(bi)){
-//            System.out.println("存进去了" + bi);
-            return true;
-        }
-        else{
-            //测试
-            System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-        }
-        return false;
-    }
-
-    private synchronized boolean checkUpdate() {
-//        System.out.println(qLearningMetric.getCt());
-        long ct = qLearningMetric.getCt();
-        long t = TimeUtil.currentTimeMillis();
-
-        qLearningMetric.addCn();
-
-        if(ct <= 0){
-            qLearningMetric.setCt(TimeUtil.currentTimeMillis());
-//            System.out.println("start tick —— " + qLearningMetric.getCt()
-//            + "    start count —— " + qLearningMetric.getCn());
-            return true;
-        }
-        if(t-ct >= 20 || qLearningMetric.getCn() >= 200){
-
-            System.out.println("bombing! —— " + (t-ct)
-            + "    total count —— " + qLearningMetric.getCn());
-//            System.out.println(" ____________________________________________");
-            qLearningMetric.setCt(TimeUtil.currentTimeMillis());
-            qLearningMetric.resetCn();
-            return true;
-        }
-        return false;
     }
 
     void checkFlow(ResourceWrapper resource, Context context, DefaultNode node, int count, boolean prioritized)
