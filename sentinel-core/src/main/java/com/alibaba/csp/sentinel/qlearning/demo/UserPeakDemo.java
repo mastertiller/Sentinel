@@ -33,7 +33,7 @@ public class UserPeakDemo {
     static QLearningMetric qLearningMetric = QLearningMetric.getInstance();
     static QTable qTableTrain = new QTable();
 
-    private static boolean isQLearning = true;
+    private static boolean isQLearning = false;
 
     //set a switch， when it is true it will employ Qlearnig algorithm. If not it will use BBR algorithm.
     private static String qTablePath = "sentinel-core/src/main/java/com/alibaba/csp/sentinel/qlearning/demo/" + Thread.currentThread().getStackTrace()[1].getClassName() + "-QTable.txt";
@@ -48,7 +48,7 @@ public class UserPeakDemo {
         qLearningMetric.setIfCheckCPU(ifCheckCPU);
 
         //是否更新
-//        qLearningMetric.setQtable(qTableTrain.read(qTablePath));
+        qLearningMetric.setQtable(qTableTrain.read(qTablePath));
 
         Entry entry = null;
         try {

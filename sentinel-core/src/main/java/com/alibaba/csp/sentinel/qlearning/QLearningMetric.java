@@ -7,10 +7,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class QLearningMetric {
-    /**
-     * 注意：原子类变量不能直接用！如this.bi，应该用getBi()！
-     */
-    ///////////////////////需要检查是否上锁的变量/////////////////////////
+
     public boolean ifCheckCPU = true;
     public final int maxTrainNum = 50000000;
 
@@ -24,7 +21,7 @@ public class QLearningMetric {
 
 
     private final double alpha = 0.1;//alpha控制了效用方程的qps的参数
-    private final double beta = 0.01;//控制了效用方程的RT的参数
+    private final double beta = 2.5;//控制了效用方程的RT的参数
 
     private final double delta = 0.8;
     private final double gamma = 0.05;
@@ -39,8 +36,6 @@ public class QLearningMetric {
     private final int ThreadInterval = 2;
     private int statesCount;
 
-
-    ///////////////////////计时与计数器///////////////////
     public long getCt() {
         return ct.get();
     }
@@ -76,8 +71,6 @@ public class QLearningMetric {
 
     private AtomicInteger bi = new AtomicInteger(0);
 
-    /////////////////////////保存QInfo////////////////////////////////
-
     public ConcurrentHashMap<Integer,QInfo > getHm() {
         return hm;
     }
@@ -91,13 +84,12 @@ public class QLearningMetric {
             System.out.println("   pushQInfo: 不存在");
         }
         QInfo qInfo = getHm().get(getBi());
-//        this.hm.remove(this.bi);
+        this.hm.remove(this.bi);
         return qInfo;
     }
 
     private ConcurrentHashMap<Integer, QInfo> hm = new ConcurrentHashMap<>();
 
-    ////////////////////////////action//////////////////////////
 
     public int getAction(){
         return this.action.get();
@@ -107,8 +99,6 @@ public class QLearningMetric {
     }
 
     private AtomicInteger action = new AtomicInteger(1);
-
-    /////////////////////////////方法//////////////////////////////////////
 
     /**
      * 通过Cpu使用率来判断当前所处的状态，返回值为qlearning算法里的当前状态
@@ -131,23 +121,7 @@ public class QLearningMetric {
         String currentState = stateC + "#" + stateQ + "#" + stateR + "#" + stateT;
 
         if (!Qtable.containsKey(currentState)) {
-            //测试用
-//            if (!isTrain()) {
-//                newStateCount++;
-//                System.out.print("new State: " + currentState);
-//            }
-//            System.out.println("training - new State: " + currentState);
             Qtable.put(currentState, new double[actionsCount]);
-            //返回current state
-        } else if (Qtable.containsKey(currentState)) {
-            //测试用
-//            if (!isTrain()) {
-//                oldStateCount++;
-//                System.out.print("old State: " + currentState);
-//            }
-//            System.out.println("training - old State: " + currentState);
-        } else {
-            System.out.println("Error in get state from Q table.");
         }
         return currentState;
     }
@@ -157,6 +131,9 @@ public class QLearningMetric {
     }
 
     public int getReward(double u,double nextU) {
+        if( u == 0){
+            return rewardValue;
+        }
         double UtilityIncrease = nextU - u;
         if ( UtilityIncrease >= tolerance) {
             return rewardValue;

@@ -13,7 +13,6 @@ import sun.plugin.dom.html.HTMLFormElement;
 
 public class QLearningSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
     private QLearningLearner qLearningLearner = new QLearningLearner();
-    private QLearningMetric qLearningMetric = new QLearningMetric().getInstance();
 
     @Override
     public void entry(Context context, ResourceWrapper resourceWrapper, DefaultNode node, int count, boolean prioritized, Object... args)
