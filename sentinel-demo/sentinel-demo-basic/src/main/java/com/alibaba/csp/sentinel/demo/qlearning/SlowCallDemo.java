@@ -1,4 +1,4 @@
-package com.alibaba.csp.sentinel.qlearning.demo;
+package com.alibaba.csp.sentinel.demo.qlearning;
 
 import com.alibaba.csp.sentinel.Entry;
 import com.alibaba.csp.sentinel.SphU;

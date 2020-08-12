@@ -1,4 +1,4 @@
-package com.alibaba.csp.sentinel.qlearning.demo;
+package com.alibaba.csp.sentinel.demo.qlearning;
 
 import com.alibaba.csp.sentinel.Entry;
 import com.alibaba.csp.sentinel.SphU;
@@ -7,14 +7,12 @@ import com.alibaba.csp.sentinel.qlearning.qtable.QTable;
 import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.alibaba.csp.sentinel.util.TimeUtil;
 
-import java.io.IOException;
-import java.util.HashMap;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class UserPeakCpuDemo {
+public class UserPeakDemo {
     private static final String KEY = "abc";
 
     private static AtomicInteger pass = new AtomicInteger();
@@ -26,6 +24,7 @@ public class UserPeakCpuDemo {
     private static volatile boolean stop2 = false;
     private static volatile boolean start2 = false;
     private static volatile boolean flag = false;
+    private static AtomicInteger Interval2 = new AtomicInteger(1000);
     private static final int threadCount = 100;
     private static int seconds = 60 + 40;
 
@@ -33,12 +32,12 @@ public class UserPeakCpuDemo {
     static QTable qTableTrain = new QTable();
 
     private static boolean isQLearning = false;
+
     //set a switch， when it is true it will employ Qlearnig algorithm. If not it will use BBR algorithm.
     private static String qTablePath = "sentinel-core/src/main/java/com/alibaba/csp/sentinel/qlearning/demo/" + Thread.currentThread().getStackTrace()[1].getClassName() + "-QTable.txt";
 
-
-    //如果考虑CPU这个state，为true
-    private static boolean ifCheckCPU = true;
+    //是否考虑CPU这个state
+    private static boolean ifCheckCPU = false;
 
     public static void main(String[] args) throws Exception {
 
@@ -48,7 +47,6 @@ public class UserPeakCpuDemo {
 
         //是否更新
         qLearningMetric.setQtable(qTableTrain.read(qTablePath));
-
 
         Entry entry = null;
         try {
@@ -80,14 +78,6 @@ public class UserPeakCpuDemo {
             t.start();
         }
     }
-    static void CpuRunMethod(){
-        for (Long i = 0L ; i < 500000L ; i ++) {
-            double a = 0.00001 * 0.00001;
-            double b = 0.00001 * a;
-            double c = 0.00001 * b;
-            double d = 0.00001 * c;
-        }
-    }
 
     static class StableTask implements Runnable {
         @Override
@@ -96,22 +86,9 @@ public class UserPeakCpuDemo {
                 Entry entry = null;
                 try {
                     entry = SphU.entry(KEY);
-                    CpuRunMethod();
                     // token acquired, means pass
-                    Random random2 = new Random();
-                    try {
-                        TimeUnit.MILLISECONDS.sleep(random2.nextInt(480));
-                    } catch (InterruptedException e) {
-                        // ignore
-                    }
                     pass.incrementAndGet();
                 } catch (BlockException e1) {
-                    Random random2 = new Random();
-                    try {
-                        TimeUnit.MILLISECONDS.sleep(random2.nextInt(500));
-                    } catch (InterruptedException e) {
-                        // ignore
-                    }
                     block.incrementAndGet();
                 } catch (Exception e2) {
                     // biz exception
@@ -120,6 +97,12 @@ public class UserPeakCpuDemo {
                     if (entry != null) {
                         entry.exit();
                     }
+                }
+                Random random2 = new Random();
+                try {
+                    TimeUnit.MILLISECONDS.sleep(random2.nextInt(500));
+                } catch (InterruptedException e) {
+                    // ignore
                 }
             }
         }
@@ -131,15 +114,8 @@ public class UserPeakCpuDemo {
                 Entry entry = null;
                 try {
                     entry = SphU.entry(KEY);
-                    CpuRunMethod();
                     pass.addAndGet(1);
                 } catch (BlockException e1) {
-                    Random random2 = new Random();
-                    try {
-                        TimeUnit.MILLISECONDS.sleep(random2.nextInt(5));
-                    } catch (InterruptedException e) {
-                        // ignore
-                    }
                     block.incrementAndGet();
                 } catch (Exception e2) {
                     // biz exception
@@ -148,6 +124,12 @@ public class UserPeakCpuDemo {
                     if (entry != null) {
                         entry.exit();
                     }
+                }
+                Random random2 = new Random();
+                try {
+                    TimeUnit.MILLISECONDS.sleep(random2.nextInt(5));
+                } catch (InterruptedException e) {
+                    // ignore
                 }
             }
         }
@@ -160,15 +142,9 @@ public class UserPeakCpuDemo {
                 Entry entry = null;
                 try {
                     entry = SphU.entry(KEY);
-                    CpuRunMethod();
                     pass.addAndGet(1);
+
                 } catch (BlockException e1) {
-                    Random random2 = new Random();
-                    try {
-                        TimeUnit.MILLISECONDS.sleep(random2.nextInt(2));
-                    } catch (InterruptedException e) {
-                        // ignore
-                    }
                     block.incrementAndGet();
                 } catch (Exception e2) {
                     // biz exception
@@ -178,7 +154,12 @@ public class UserPeakCpuDemo {
                         entry.exit();
                     }
                 }
-
+                Random random2 = new Random();
+                try {
+                    TimeUnit.MILLISECONDS.sleep(random2.nextInt(2));
+                } catch (InterruptedException e) {
+                    // ignore
+                }
             }
         }
     }
@@ -225,7 +206,9 @@ public class UserPeakCpuDemo {
                 } else {
                     System.out.println();
                 }
-
+                if(Interval2.get() >= 49) {
+                    Interval2.set(Interval2.get() - 39);
+                }
                 if(seconds <= 70) {
                     stop1 = true;
                 }
@@ -235,6 +218,7 @@ public class UserPeakCpuDemo {
                 if (seconds-- <= 0) {
                     stop = true;
                 }
+
             }
 
             long cost = System.currentTimeMillis() - start;
@@ -256,4 +240,3 @@ public class UserPeakCpuDemo {
         }
     }
 }
-

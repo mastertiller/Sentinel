@@ -30,9 +30,6 @@ public class QLearningLearner {
         catch(Exception e){
             e.printStackTrace();
         }
-        if(qLearningMetric.getAction() == 0){
-            throw new SystemBlockException(resourceWrapper.getName(), "q-learning");
-        }
     }
 
     private boolean checkUpdate() {
