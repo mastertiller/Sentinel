@@ -54,9 +54,10 @@ public class WebMvcTestController {
 
     private void doBusiness() {
         int num = 50000;
-        int[] randomList = new int[num];
+        Random random = new Random();
+        List<Integer> randomList = new ArrayList<>();
         for (int i = 0;i < num;i++){
-            randomList[i] = j;
+            randomList.add(random.nextInt(num));
         }
         Collections.sort(randomList);
     }
