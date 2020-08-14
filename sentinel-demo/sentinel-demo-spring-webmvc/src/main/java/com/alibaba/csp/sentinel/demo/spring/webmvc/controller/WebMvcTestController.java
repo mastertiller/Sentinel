@@ -15,6 +15,9 @@
  */
 package com.alibaba.csp.sentinel.demo.spring.webmvc.controller;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -53,12 +56,13 @@ public class WebMvcTestController {
     }
 
     private void doBusiness() {
-        Random random = new Random(1);
-        try {
-            TimeUnit.MILLISECONDS.sleep(random.nextInt(100));
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        int num = 50000;
+        Random random = new Random();
+        List<Integer> randomList = new ArrayList<>();
+        for (int i = 0; i < num; i++) {
+            randomList.add(random.nextInt(num));
         }
+        Collections.sort(randomList);
     }
 
 }
