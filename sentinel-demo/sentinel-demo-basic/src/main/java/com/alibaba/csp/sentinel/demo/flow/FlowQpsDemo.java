@@ -34,7 +34,7 @@ import com.alibaba.csp.sentinel.slots.block.flow.FlowRuleManager;
  */
 public class FlowQpsDemo {
 
-    private static final String KEY = "method";
+    private static final String KEY = "abc";
 
     private static AtomicInteger pass = new AtomicInteger();
     private static AtomicInteger block = new AtomicInteger();
@@ -72,37 +72,7 @@ public class FlowQpsDemo {
 
     private static void simulateTraffic() {
         for (int i = 0; i < threadCount; i++) {
-            Thread t = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    while (!stop) {
-                        Entry entry = null;
-
-                        try {
-                            entry = SphU.entry(KEY);
-                            // token acquired, means pass
-                            pass.addAndGet(1);
-                        } catch (BlockException e1) {
-                            block.incrementAndGet();
-                        } catch (Exception e2) {
-                            // biz exception
-                        } finally {
-                            total.incrementAndGet();
-                            if (entry != null) {
-                                entry.exit();
-                            }
-                        }
-
-                        Random random2 = new Random();
-                        try {
-                            TimeUnit.MILLISECONDS.sleep(
-                                    random2.nextInt(5));
-                        } catch (InterruptedException e) {
-                            // ignore
-                        }
-                    }
-                }
-            });
+            Thread t = new Thread(new RunTask());
             t.setName("simulate-traffic-Task");
             t.start();
         }
@@ -159,5 +129,34 @@ public class FlowQpsDemo {
         }
     }
 
+    static class RunTask implements Runnable {
+        @Override
+        public void run() {
+            while (!stop) {
+                Entry entry = null;
 
+                try {
+                    entry = SphU.entry(KEY);
+                    // token acquired, means pass
+                    pass.addAndGet(1);
+                } catch (BlockException e1) {
+                    block.incrementAndGet();
+                } catch (Exception e2) {
+                    // biz exception
+                } finally {
+                    total.incrementAndGet();
+                    if (entry != null) {
+                        entry.exit();
+                    }
+                }
+
+                Random random2 = new Random();
+                try {
+                    TimeUnit.MILLISECONDS.sleep(random2.nextInt(50));
+                } catch (InterruptedException e) {
+                    // ignore
+                }
+            }
+        }
+    }
 }
