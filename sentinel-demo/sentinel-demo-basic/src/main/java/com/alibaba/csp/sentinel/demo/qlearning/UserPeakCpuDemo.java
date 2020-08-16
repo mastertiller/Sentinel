@@ -47,7 +47,6 @@ public class UserPeakCpuDemo {
         //是否更新
         qLearningMetric.setQtable(qTableTrain.read(qTablePath));
 
-
         Entry entry = null;
         try {
             entry = SphU.entry(KEY);

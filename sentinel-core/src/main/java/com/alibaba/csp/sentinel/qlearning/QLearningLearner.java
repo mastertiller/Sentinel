@@ -2,6 +2,7 @@ package com.alibaba.csp.sentinel.qlearning;
 
 import com.alibaba.csp.sentinel.Constants;
 import com.alibaba.csp.sentinel.node.DefaultNode;
+import com.alibaba.csp.sentinel.qlearning.qtable.QTable;
 import com.alibaba.csp.sentinel.slotchain.ResourceWrapper;
 import com.alibaba.csp.sentinel.slots.system.SystemBlockException;
 import com.alibaba.csp.sentinel.slots.system.SystemRuleManager;
@@ -9,6 +10,10 @@ import com.alibaba.csp.sentinel.util.TimeUtil;
 
 public class QLearningLearner {
     QLearningMetric qLearningMetric = new QLearningMetric().getInstance();
+    QTable qTable = new QTable();
+
+    private static String qTablePath = "sentinel-core/src/main/java/com/alibaba/csp/sentinel/qlearning/qtable/QTable-UserPeak.txt";
+
     private int bacthNum = 200;
     private long batchTime = 20;
 
@@ -20,6 +25,9 @@ public class QLearningLearner {
                 }
                 //开始下一批决策
                 int bi = qLearningMetric.addBi();
+                if(qLearningMetric.getBi() % 10 == 0){
+                    qTable.save(qLearningMetric.getQtable(),qTablePath);
+                }
                 //决策
                 QInfo qInfo = takeAction(node);
 
@@ -29,6 +37,9 @@ public class QLearningLearner {
         }
         catch(Exception e){
             e.printStackTrace();
+        }
+        if(qLearningMetric.getAction() == 0){
+            throw new SystemBlockException(resourceWrapper.getName(), "q-learning");
         }
     }
 

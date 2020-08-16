@@ -199,7 +199,7 @@ public class QLearningMetric {
         String fromState;
         int toAction;
         statesCount = Qtable.size();
-        System.out.println("\n ======= Show Policy =======" + statesCount);
+        System.out.println("\n ======= Show Policy ======= " + statesCount);
 
         for (Map.Entry entry : Qtable.entrySet()) {
             fromState = (String) entry.getKey();
