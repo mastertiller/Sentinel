@@ -30,7 +30,6 @@ public class QTableStorage {
         if (!file.exists()) {
             try {
                 file.createNewFile();
-                System.out.println(" no q table exists.");
                 return qTable;
             } catch (IOException e) {
                 e.printStackTrace();
@@ -53,15 +52,5 @@ public class QTableStorage {
         }
 
         return qTable;
-    }
-
-    public static void recordLog(String log, String filePath) {
-        try {
-            FileWriter writer = new FileWriter(filePath, true);
-            writer.write(log);
-            writer.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 }
