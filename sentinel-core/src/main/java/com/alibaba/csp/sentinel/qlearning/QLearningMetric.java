@@ -1,5 +1,8 @@
 package com.alibaba.csp.sentinel.qlearning;
 
+import com.alibaba.csp.sentinel.qlearning.qtable.QTable;
+
+import java.io.IOException;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
@@ -7,18 +10,21 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class QLearningMetric {
+    QTable qTable = new QTable();
+    private String qTablePath = "sentinel-core/src/main/java/com/alibaba/csp/sentinel/qlearning/qtable/QTable-UserPeak.txt";
+
 
     public boolean ifCheckCPU = true;
-    public final int maxTrainNum = 50000000;
+    public final int maxTrainNum = 200;
 
-    public boolean isLearning;
+    public boolean isLearning = false;
 
     final int[] actionValues = new int[]{0, 1};
     String[] actionNames = new String[]{"Block", "Accept"};
     private volatile int actionsCount = actionValues.length;
 
     private volatile ConcurrentHashMap<String, double[]> Qtable = new ConcurrentHashMap<>();
-
+//    private volatile ConcurrentHashMap<String, double[]> Qtable = qTable.read(qTablePath);
 
     private final double alpha = 0.1;//alpha控制了效用方程的qps的参数
     private final double beta = 2.5;//控制了效用方程的RT的参数
@@ -30,11 +36,14 @@ public class QLearningMetric {
 
     private int rewardValue = 10;
     private int punishValue = -1;
-    private final double CpuInterval = 0.1;
-    private final int QpsInterval = 200;
-    private final int RtInterval = 10;
+    private final double CpuInterval = 0.05;
+    private final int QpsInterval = 50;
+    private final int RtInterval = 5;
     private final int ThreadInterval = 2;
     private int statesCount;
+
+    public QLearningMetric() throws IOException {
+    }
 
     public long getCt() {
         return ct.get();
@@ -240,7 +249,15 @@ public class QLearningMetric {
     }
 
     private static class QLearningMetricContainer {
-        private static QLearningMetric instance = new QLearningMetric();
+        private static QLearningMetric instance;
+
+        static {
+            try {
+                instance = new QLearningMetric();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public static QLearningMetric getInstance() {

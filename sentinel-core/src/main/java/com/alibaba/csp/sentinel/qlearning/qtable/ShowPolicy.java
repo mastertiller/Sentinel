@@ -8,7 +8,15 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class ShowPolicy {
     private static String qTablePath = "sentinel-core/src/main/java/com/alibaba/csp/sentinel/qlearning/qtable/QTable-UserPeak.txt";
-    static QLearningMetric qLearningMetric = new QLearningMetric().getInstance();
+    static QLearningMetric qLearningMetric;
+
+    static {
+        try {
+            qLearningMetric = new QLearningMetric().getInstance();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     public static void main(String[] args) throws IOException {
         QTable qTable = new QTable();

@@ -8,6 +8,8 @@ import com.alibaba.csp.sentinel.slots.system.SystemBlockException;
 import com.alibaba.csp.sentinel.slots.system.SystemRuleManager;
 import com.alibaba.csp.sentinel.util.TimeUtil;
 
+import java.io.IOException;
+
 public class QLearningLearner {
     QLearningMetric qLearningMetric = new QLearningMetric().getInstance();
     QTable qTable = new QTable();
@@ -17,28 +19,31 @@ public class QLearningLearner {
     private int bacthNum = 200;
     private long batchTime = 20;
 
+    public QLearningLearner() throws IOException {
+    }
+
     public synchronized void learn(ResourceWrapper resourceWrapper,DefaultNode node) throws SystemBlockException {
         try {
             if (checkUpdate()) {
+                //每批第一个线程开始计时和计数
                 if (containsQInfo() && qLearningMetric.isTrain()) {
+                    //取，
+                    //更新
                     UpdateQ(node);
                 }
                 //开始下一批决策
                 int bi = qLearningMetric.addBi();
-                if(qLearningMetric.getBi() % 10 == 0){
-                    qTable.save(qLearningMetric.getQtable(),qTablePath);
-                }
                 //决策
                 QInfo qInfo = takeAction(node);
-
+            System.out.println("      状态: " + qInfo.getState() + "      决策: " + qInfo.getAction() );
+                //存
                 qLearningMetric.putHm(bi, qInfo);
-
             }
         }
         catch(Exception e){
             e.printStackTrace();
         }
-        if(qLearningMetric.getAction() == 0){
+        if (qLearningMetric.getAction() == 0) {
             throw new SystemBlockException(resourceWrapper.getName(), "q-learning");
         }
     }
@@ -56,6 +61,9 @@ public class QLearningLearner {
             return true;
         }
         if(t-ct >= batchTime || qLearningMetric.getCn() >= bacthNum){
+
+            System.out.println("!bombing!     total time —— " + (t-ct)
+                    + "    total count —— " + qLearningMetric.getCn());
 
             qLearningMetric.setCt(TimeUtil.currentTimeMillis());
             qLearningMetric.resetCn();
@@ -91,6 +99,9 @@ public class QLearningLearner {
         double q = qLearningMetric.getQValue(s,a);
         double maxQ = qLearningMetric.getMaxQ(SystemRuleManager.getCurrentCpuUsage(),node.passQps(),node.avgRt(),0);
         double qUpdated = qLearningMetric.updateQ(q,r,maxQ);
+        System.out.println(qLearningMetric.getBi() + "  batch END "  + "    ======== NEXT successQPS: " + node.successQps() + "     ======= NEXT RT: "  + node.avgRt() + "     ======= NEXT Utility : " + nextUtility);
+        System.out.println(qLearningMetric.getBi() + "  batch END "  + " ======= STATE: " + s +" ======== Q: " + q + " ======== REWARD: " + r + " ======== maxQ: " + maxQ + " ======= Q UPDATE : " + qUpdated + " ----------------------------------------------------------------------------");
+        System.out.println(" ");
         qLearningMetric.setQValue(s,a,qUpdated);
     }
 
@@ -101,16 +112,22 @@ public class QLearningLearner {
         if(qLearningMetric.isTrain()){
             //随机选择
             a = qLearningMetric.getRandomAction();
-
+            System.out.println("  随机决策 " );
         }
         else{
             //从qtable中选择
+            System.out.println("  ******************** Train Finish *********************");
+            qTable.save(qLearningMetric.getQtable(),qTablePath);
             a = qLearningMetric.policy(s);
         }
 
         qLearningMetric.setAction(a);
 
         double u = qLearningMetric.calculateUtility(node.successQps(),node.avgRt());
+
+        System.out.println( qLearningMetric.getBi() + " batch BEGIN " + " --------- CPU usage: " + SystemRuleManager.getCurrentCpuUsage() +  "    ======== successQPS: " + node.successQps() + "    ======== RT: "  + node.avgRt() + "     ======= Utility : " + u);
+
+//        System.out.println( qLearningMetric.getBi() + " batch BEGIN " + " --------- ThreadNum: " + Constants.ENTRY_NODE.curThreadNum() +  "    ======== successQPS: " + node.successQps() + "    ======== RT: "  + node.avgRt() + "     ======= Utility : " + u);
 
         QInfo qInfo = new QInfo();
         qInfo.setQInfo(s,a,u);

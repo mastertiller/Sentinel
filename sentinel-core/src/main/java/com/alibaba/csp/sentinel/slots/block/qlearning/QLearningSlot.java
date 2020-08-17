@@ -11,8 +11,13 @@ import com.alibaba.csp.sentinel.slotchain.ResourceWrapper;
 import com.alibaba.csp.sentinel.slots.system.SystemBlockException;
 import sun.plugin.dom.html.HTMLFormElement;
 
+import java.io.IOException;
+
 public class QLearningSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
     private QLearningLearner qLearningLearner = new QLearningLearner();
+
+    public QLearningSlot() throws IOException {
+    }
 
     @Override
     public void entry(Context context, ResourceWrapper resourceWrapper, DefaultNode node, int count, boolean prioritized, Object... args)
