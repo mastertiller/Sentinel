@@ -17,7 +17,7 @@ public class QLearningMetric {
     public boolean ifCheckCPU = true;
     public final int maxTrainNum = 200;
 
-    public boolean isLearning = false;
+    public boolean isLearning = true;
 
     final int[] actionValues = new int[]{0, 1};
     String[] actionNames = new String[]{"Block", "Accept"};
@@ -26,7 +26,7 @@ public class QLearningMetric {
     private volatile ConcurrentHashMap<String, double[]> Qtable = new ConcurrentHashMap<>();
 //    private volatile ConcurrentHashMap<String, double[]> Qtable = qTable.read(qTablePath);
 
-    private final double alpha = 0.1;//alpha控制了效用方程的qps的参数
+    private final double alpha = 0.5;//alpha控制了效用方程的qps的参数
     private final double beta = 2.5;//控制了效用方程的RT的参数
 
     private final double delta = 0.8;
