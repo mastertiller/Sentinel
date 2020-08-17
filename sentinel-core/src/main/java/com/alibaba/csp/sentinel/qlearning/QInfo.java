@@ -21,6 +21,11 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author ZhouYanjun
  */
 public class QInfo {
+
+    String state;
+    AtomicInteger action = new AtomicInteger(0);
+    volatile double utility;
+
     public String getState() {
         return this.state;
     }
@@ -41,15 +46,7 @@ public class QInfo {
         return utility;
     }
 
-    public void setUtility(double utility) {
-        this.utility = utility;
-    }
-
-    String state;
-    AtomicInteger action = new AtomicInteger(0);
-    volatile double utility;
-
-    public synchronized void setQInfo(String state, int action,double utility){
+    public synchronized void setQInfo(String state, int action, double utility) {
         this.state = state;
         this.action.set(action);
         this.utility = utility;

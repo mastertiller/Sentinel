@@ -25,6 +25,7 @@ import com.alibaba.csp.sentinel.slotchain.AbstractLinkedProcessorSlot;
 import com.alibaba.csp.sentinel.slotchain.ResourceWrapper;
 import com.alibaba.csp.sentinel.slots.system.SystemBlockException;
 import sun.plugin.dom.html.HTMLFormElement;
+
 /**
  * @author ZhouYanjun
  */
@@ -35,7 +36,7 @@ public class QLearningSlot extends AbstractLinkedProcessorSlot<DefaultNode> {
     @Override
     public void entry(Context context, ResourceWrapper resourceWrapper, DefaultNode node, int count, boolean prioritized, Object... args)
             throws Throwable {
-        qLearningLearner.learn(resourceWrapper,node);
+        qLearningLearner.learn(resourceWrapper, node);
 
         fireEntry(context, resourceWrapper, node, count, prioritized, args);
     }

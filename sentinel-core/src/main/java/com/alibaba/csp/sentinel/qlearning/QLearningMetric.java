@@ -89,9 +89,9 @@ public class QLearningMetric {
         return alpha * successQPS - beta * avgRt;
     }
 
-    public int getReward(double u,double nextU) {
+    public int getReward(double u, double nextU) {
         double UtilityIncrease = nextU - u;
-        if ( UtilityIncrease >= tolerance) {
+        if (UtilityIncrease >= tolerance) {
             return rewardValue;
         } else if (UtilityIncrease <= -1 * tolerance) {
             return punishValue;
@@ -197,7 +197,7 @@ public class QLearningMetric {
         cn.incrementAndGet();
     }
 
-    public void resetCn(){
+    public void resetCn() {
         cn.set(0);
     }
 
@@ -208,16 +208,17 @@ public class QLearningMetric {
     public int addBi() {
         return bi.incrementAndGet();
     }
-    public void setBi(int i){
+
+    public void setBi(int i) {
         bi.set(i);
     }
 
-    public ConcurrentHashMap<Integer,QInfo > getHm() {
+    public ConcurrentHashMap<Integer, QInfo> getHm() {
         return hm;
     }
 
-    public void putHm(int i,QInfo qInfo) {
-        this.hm.put(i,qInfo);
+    public void putHm(int i, QInfo qInfo) {
+        this.hm.put(i, qInfo);
     }
 
     public QInfo pushQInfo() {
@@ -225,9 +226,10 @@ public class QLearningMetric {
         return qInfo;
     }
 
-    public int getAction(){
+    public int getAction() {
         return this.action.get();
     }
+
     public void setAction(int a) {
         this.action.set(a);
     }
