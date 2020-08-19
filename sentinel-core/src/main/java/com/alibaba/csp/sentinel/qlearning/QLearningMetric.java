@@ -25,7 +25,7 @@ public class QLearningMetric {
     private volatile int actionsCount = actionValues.length;
 
 //    private volatile ConcurrentHashMap<String, double[]> Qtable = new ConcurrentHashMap<>();
-    private volatile ConcurrentHashMap<String, double[]> Qtable = qTable.read(qTablePath);
+    private ConcurrentHashMap<String, double[]> Qtable = qTable.read(qTablePath);
 
     private final double alpha = 0.5;//alpha控制了效用方程的qps的参数
     private final double beta = 2.5;//控制了效用方程的RT的参数
@@ -34,6 +34,16 @@ public class QLearningMetric {
     private final double gamma = 0.05;
 
     private final double tolerance = 0.1;
+
+    public ConcurrentHashMap<Integer, Double> getRtMap() {
+        return RtMap;
+    }
+
+    public void addRtMap(int cn, double rt) {
+        RtMap.put(cn,rt);
+    }
+
+    private ConcurrentHashMap<Integer, Double> RtMap = new ConcurrentHashMap<>();
 
     private int rewardValue = 10;
     private int punishValue = -1;

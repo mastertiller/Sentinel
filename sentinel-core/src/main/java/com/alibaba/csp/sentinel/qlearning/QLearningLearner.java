@@ -30,9 +30,11 @@ public class QLearningLearner {
                     //取，
                     //更新
                     UpdateQ(node);
+
                 }
                 //开始下一批决策
                 int bi = qLearningMetric.addBi();
+                qLearningMetric.addRtMap(bi,node.avgRt());
                 //决策
                 QInfo qInfo = takeAction(node);
                 System.out.println("      状态: " + qInfo.getState() + "      决策: " + qInfo.getAction());
