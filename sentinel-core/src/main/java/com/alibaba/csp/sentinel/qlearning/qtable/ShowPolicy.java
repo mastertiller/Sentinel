@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ShowPolicy {
-    private static String qTablePath = "sentinel-core/src/main/java/com/alibaba/csp/sentinel/qlearning/qtable/QTable-UserPeak.txt";
+    private static String qTablePath = "sentinel-core/src/main/java/com/alibaba/csp/sentinel/qlearning/qtable/QTable-UserPeak-3.txt";
     static QLearningMetric qLearningMetric;
 
     static {

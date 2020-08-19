@@ -14,7 +14,7 @@ public class QLearningLearner {
     QLearningMetric qLearningMetric = new QLearningMetric().getInstance();
     QTable qTable = new QTable();
 
-    private static String qTablePath = "sentinel-core/src/main/java/com/alibaba/csp/sentinel/qlearning/qtable/QTable-UserPeak.txt";
+    private static String qTablePath = "sentinel-core/src/main/java/com/alibaba/csp/sentinel/qlearning/qtable/QTable-UserPeak-3.txt";
 
     private int bacthNum = 200;
     private long batchTime = 20;
@@ -35,12 +35,11 @@ public class QLearningLearner {
                 int bi = qLearningMetric.addBi();
                 //决策
                 QInfo qInfo = takeAction(node);
-            System.out.println("      状态: " + qInfo.getState() + "      决策: " + qInfo.getAction() );
+                System.out.println("      状态: " + qInfo.getState() + "      决策: " + qInfo.getAction());
                 //存
                 qLearningMetric.putHm(bi, qInfo);
             }
-        }
-        catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
         if (qLearningMetric.getAction() == 0) {
@@ -95,7 +94,7 @@ public class QLearningLearner {
 
         double nextUtility = qLearningMetric.calculateUtility(node.successQps(),node.avgRt());
 
-        int r = qLearningMetric.getReward(u,nextUtility);
+        int r = qLearningMetric.getReward(a,u,nextUtility);
         double q = qLearningMetric.getQValue(s,a);
         double maxQ = qLearningMetric.getMaxQ(SystemRuleManager.getCurrentCpuUsage(),node.passQps(),node.avgRt(),0);
         double qUpdated = qLearningMetric.updateQ(q,r,maxQ);
@@ -116,8 +115,8 @@ public class QLearningLearner {
         }
         else{
             //从qtable中选择
-            System.out.println("  ******************** Train Finish *********************");
-            qTable.save(qLearningMetric.getQtable(),qTablePath);
+//            System.out.println("  ******************** Train Finish *********************");
+//            qTable.save(qLearningMetric.getQtable(),qTablePath);
             a = qLearningMetric.policy(s);
         }
 

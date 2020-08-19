@@ -11,20 +11,21 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class QLearningMetric {
     QTable qTable = new QTable();
-    private String qTablePath = "sentinel-core/src/main/java/com/alibaba/csp/sentinel/qlearning/qtable/QTable-UserPeak.txt";
+    private String qTablePath = "sentinel-core/src/main/java/com/alibaba/csp/sentinel/qlearning/qtable/QTable-UserPeak-3.txt";
 
+    private final int product = 100;
 
     public boolean ifCheckCPU = true;
-    public final int maxTrainNum = 200;
+    public final int maxTrainNum = 500;
 
-    public boolean isLearning = true;
+    public boolean isLearning = false;
 
     final int[] actionValues = new int[]{0, 1};
     String[] actionNames = new String[]{"Block", "Accept"};
     private volatile int actionsCount = actionValues.length;
 
-    private volatile ConcurrentHashMap<String, double[]> Qtable = new ConcurrentHashMap<>();
-//    private volatile ConcurrentHashMap<String, double[]> Qtable = qTable.read(qTablePath);
+//    private volatile ConcurrentHashMap<String, double[]> Qtable = new ConcurrentHashMap<>();
+    private volatile ConcurrentHashMap<String, double[]> Qtable = qTable.read(qTablePath);
 
     private final double alpha = 0.5;//alpha控制了效用方程的qps的参数
     private final double beta = 2.5;//控制了效用方程的RT的参数
@@ -139,18 +140,16 @@ public class QLearningMetric {
         return alpha * successQPS - beta * avgRt;
     }
 
-    public int getReward(double u,double nextU) {
-        if( u == 0){
+    public int getReward(int a,double u,double nextU) {
+        if( u == 0 && a == 1){
             return rewardValue;
         }
-        double UtilityIncrease = nextU - u;
-        if ( UtilityIncrease >= tolerance) {
-            return rewardValue;
-        } else if (UtilityIncrease <= -1 * tolerance) {
+        else if( u == 0 && a == 0){
             return punishValue;
-        } else {
-            return 0;
         }
+        double utilityIncrease = nextU - u;
+        double addPercentage = utilityIncrease / Math.abs(u);
+        return (int) (addPercentage * product);
     }
 
     public double getQValue(String state, int action) {
