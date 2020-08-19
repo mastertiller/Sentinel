@@ -1,6 +1,5 @@
 package com.alibaba.csp.sentinel.qlearning;
 
-import com.alibaba.csp.sentinel.Constants;
 import com.alibaba.csp.sentinel.node.DefaultNode;
 import com.alibaba.csp.sentinel.qlearning.qtable.QTable;
 import com.alibaba.csp.sentinel.slotchain.ResourceWrapper;
@@ -34,7 +33,7 @@ public class QLearningLearner {
                 }
                 //开始下一批决策
                 int bi = qLearningMetric.addBi();
-                qLearningMetric.addRtMap(bi,node.avgRt());
+                qLearningMetric.addRtList(node.avgRt());
                 //决策
                 QInfo qInfo = takeAction(node);
                 System.out.println("      状态: " + qInfo.getState() + "      决策: " + qInfo.getAction());

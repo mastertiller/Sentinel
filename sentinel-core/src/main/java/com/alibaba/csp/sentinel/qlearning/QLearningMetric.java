@@ -3,8 +3,7 @@ package com.alibaba.csp.sentinel.qlearning;
 import com.alibaba.csp.sentinel.qlearning.qtable.QTable;
 
 import java.io.IOException;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -35,15 +34,16 @@ public class QLearningMetric {
 
     private final double tolerance = 0.1;
 
-    public ConcurrentHashMap<Integer, Double> getRtMap() {
-        return RtMap;
+    public List<Double> getRtList() {
+        return RtList;
     }
 
-    public void addRtMap(int cn, double rt) {
-        RtMap.put(cn,rt);
+    public void addRtList(double rt) {
+        RtList.add(rt);
     }
 
-    private ConcurrentHashMap<Integer, Double> RtMap = new ConcurrentHashMap<>();
+    private List<Double> RtList = new ArrayList<>();
+
 
     private int rewardValue = 10;
     private int punishValue = -1;
@@ -54,6 +54,7 @@ public class QLearningMetric {
     private int statesCount;
 
     public QLearningMetric() throws IOException {
+        Collections.synchronizedList(RtList);
     }
 
     public long getCt() {

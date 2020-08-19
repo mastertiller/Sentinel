@@ -15,11 +15,14 @@
  */
 package com.alibaba.csp.sentinel.demo.spring.webmvc.controller;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
+
+import com.alibaba.csp.sentinel.qlearning.QLearningMetric;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
@@ -41,6 +44,20 @@ public class WebMvcTestController {
     public String apiError() {
         doBusiness();
         return "Oops...";
+    }
+
+    @GetMapping("/showRT")
+    public String showRT() {
+        try {
+            QLearningMetric qLearningMetric = new QLearningMetric().getInstance();
+            List<Double> list = qLearningMetric.getRtList();
+            for (Double rt : list) {
+                System.out.println(rt + ", ");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return "Success";
     }
 
     @GetMapping("/foo/{id}")
